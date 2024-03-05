@@ -24,7 +24,7 @@ entropy_builtin_bins = 256;
 
 
 %
-% Test data.
+% Single-channel data series.
 
 data_1d_const = ones([ 1 size1d ]);
 data_1d_ramp = 1:size1d;
@@ -53,6 +53,16 @@ datacount_2d = size(datasets_2d, 1);
 
 datasets_alldim = [ datasets_1d ; datasets_2d ];
 datacount_alldim = size(datasets_alldim, 1);
+
+
+%
+% Multi-channel data series (for conditional entropy).
+
+data_2ch_1d_corr = [ data_1d_ramp ; data_1d_ramp ];
+data_2ch_1d_uncorr = [ data_1d_ramp ; data_1d_unirand ];
+
+data_2ch_2d_corr = cat( 3, data_2d_ramp, data_2d_ramp );
+data_2ch_2d_uncorr = cat( 3, data_2d_ramp, data_2d_unirand );
 
 
 %

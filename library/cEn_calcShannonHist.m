@@ -11,8 +11,7 @@ function bits = cEn_calcShannonHist( bincounts )
 %
 % "bincounts" is a vector or matrix containing histogram counts.
 %
-% "binbits" is a matrix with the same dimensions as "bincounts" that
-%   contains the Shannon entropy corresponding to each bin.
+% "bits" is a scalar with the average Shannon entropy of an observation.
 
 totalcount = sum( bincounts, 'all' );
 probdensity = bincounts / totalcount;

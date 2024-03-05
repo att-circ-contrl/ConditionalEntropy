@@ -29,22 +29,26 @@ if want_test_entropy
 
     thismsg = '';
 
+    % NOTE - Equal-population bins should give entropy of log2(bincount).
     binedges = cEn_getHistBinsEqPop( thisdata, histbins );
     [ bincounts scratch ] = histcounts( reshape(thisdata,1,[]), binedges );
-    thisentropy = cEn_calcShannon( bincounts );
+    thisentropy = cEn_calcShannonHist( bincounts );
     thismsg = [ thismsg sprintf( '  %6.2f (my lib)', thisentropy ) ];
 
     if have_entropy
+      % The built-in "entropy" function expects data in the range 0..1.
       minval = min( thisdata, [], 'all' );
       maxspan = max( thisdata, [], 'all' ) - minval;
       maxspan = max(1e-20,maxspan);
 
+      % This uses 256 bins with linear spacing.
       thisentropy = entropy( (thisdata - minval) / maxspan );
       thismsg = [ thismsg sprintf( '  %6.2f (matlab)', thisentropy ) ];
 
+      % NOTE - Equal-population bins should give entropy of log2(bincount).
       binedges = cEn_getHistBinsEqPop( thisdata, entropy_builtin_bins );
       [ bincounts scratch ] = histcounts( reshape(thisdata,1,[]), binedges );
-      thisentropy = cEn_calcShannon( bincounts );
+      thisentropy = cEn_calcShannonHist( bincounts );
       thismsg = [ thismsg sprintf( '  %6.2f (my lib mat)', thisentropy ) ];
     end
 

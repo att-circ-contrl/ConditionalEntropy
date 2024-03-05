@@ -1,6 +1,6 @@
-function bits = cEn_calcShannon( bincounts )
+function bits = cEn_calcShannonHist( bincounts )
 
-% function bits = cEn_calcShannon( bincounts )
+% function bits = cEn_calcShannonHist( bincounts )
 %
 % This calculates the total Shannon entropy associated with a histogram.
 % This is the average number of bits of information that you get from seeing

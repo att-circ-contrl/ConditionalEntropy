@@ -81,7 +81,7 @@ if want_test_conditional
 
     thismsg = '';
 
-    thisbinned = cEn_getBinnedMultivariate( thisdata, histbins );
+    [ thisbinned scratch ] = cEn_getBinnedMultivariate( thisdata, histbins );
     thisentropy = cEn_calcConditionalShannonHist( thisbinned );
 
     thismsg = [ thismsg sprintf( '  %6.2f', thisentropy ) ];

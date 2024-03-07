@@ -6,14 +6,14 @@
 % Switches.
 
 want_test_entropy = true;
-want_test_conditional = true;
+want_test_conditional = false;
 
 
 %
 % Geometry.
 
 size1d = 100000;
-size2d = 100;
+size2d = 300;
 histbins = 32;
 
 
@@ -27,32 +27,51 @@ entropy_builtin_bins = 256;
 %
 % Single-channel data series.
 
+
 % All of these have data ranging from 0..1.
+
 data_1d_const = ones([ 1 size1d ]);
 data_1d_ramp = 1:size1d;
+
 data_1d_ramp = data_1d_ramp / max(data_1d_ramp);
 data_1d_para = data_1d_ramp .* data_1d_ramp;
+
+data_1d_norm = normrnd(0.5, 0.17, [ 1 size1d ]);
+data_1d_norm = min(data_1d_norm, 1);
+data_1d_norm = max(data_1d_norm, 0);
+
 data_1d_unirand = rand([ 1 size1d ]);
 
 datasets_1d = ...
 { data_1d_const,   'const1', '1D Constant' ; ...
   data_1d_ramp,    'ramp1',  '1D Ramp' ; ...
   data_1d_para,    'para1',  '1D Parabola' ; ...
+  data_1d_norm,    'norm1',  '1D Normal' ; ...
   data_1d_unirand, 'urand1', '1D Uniform Random' };
 datacount_1d = size(datasets_1d, 1);
 
+
 % All of these have data ranging from 0..1.
+
 data_2d_const = ones([ size2d size2d ]);
+
 data_2d_ramp = 1:(size2d * size2d);
 data_2d_ramp = reshape(data_2d_ramp, [ size2d size2d ]);
 data_2d_ramp = data_2d_ramp / max(data_2d_ramp, [], 'all');
+
 data_2d_para = data_2d_ramp .* data_2d_ramp;
+
+data_2d_norm = normrnd(0.5, 0.17, [ size2d size2d ]);
+data_2d_norm = min(data_2d_norm, 1);
+data_2d_norm = max(data_2d_norm, 0);
+
 data_2d_unirand = rand([ size2d size2d ]);
 
 datasets_2d = ...
 { data_2d_const,   'const2', '2D Constant' ; ...
   data_2d_ramp,    'ramp2',  '2D Ramp' ; ...
   data_2d_para,    'para2',  '2D Parabola' ; ...
+  data_2d_norm,    'norm2',  '2D Normal' ; ...
   data_2d_unirand, 'urand2', '2D Uniform Random' };
 datacount_2d = size(datasets_2d, 1);
 

@@ -22,6 +22,13 @@ if want_test_entropy
   disp(thismsg);
   reportmsg = [ reportmsg thismsg newline ];
 
+
+  % Test my functions with my bin counts.
+
+  % NOTE - Equal-population bins should give entropy of log2(histbins).
+  % This will occur for the linear and uniform random test cases.
+  binedges = linspace(0, 1, histbins);
+
   for didx = 1:datacount_alldim
     thisdata = datasets_alldim{didx,1};
     datalabel = datasets_alldim{didx,2};
@@ -29,33 +36,55 @@ if want_test_entropy
 
     thismsg = '';
 
-    % NOTE - Equal-population bins should give entropy of log2(numbins).
-    binedges = cEn_getHistBinsEqPop( thisdata, histbins );
     [ bincounts scratch ] = histcounts( reshape(thisdata,1,[]), binedges );
     thisentropy = cEn_calcShannonHist( bincounts );
     thismsg = [ thismsg sprintf( '  %6.2f (my lib)', thisentropy ) ];
 
-    if have_entropy
-      % The built-in "entropy" function expects data in the range 0..1.
-      minval = min( thisdata, [], 'all' );
-      maxspan = max( thisdata, [], 'all' ) - minval;
-      maxspan = max(1e-20,maxspan);
-
-      % This uses 256 bins with linear spacing.
-      thisentropy = entropy( (thisdata - minval) / maxspan );
-      thismsg = [ thismsg sprintf( '  %6.2f (matlab)', thisentropy ) ];
-
-      % NOTE - Equal-population bins should give entropy of log2(numbins).
-      binedges = cEn_getHistBinsEqPop( thisdata, entropy_builtin_bins );
-      [ bincounts scratch ] = histcounts( reshape(thisdata,1,[]), binedges );
-      thisentropy = cEn_calcShannonHist( bincounts );
-      thismsg = [ thismsg sprintf( '  %6.2f (my lib mat)', thisentropy ) ];
-    end
+    [ thisentropy scratch ] = ...
+      cEn_calcExtrapShannon( thisdata, binedges, struct() );
+    thismsg = [ thismsg sprintf( '  %6.2f (extrap)', thisentropy ) ];
 
     thismsg = [ thismsg '   ' datatitle ];
 
     disp(thismsg);
     reportmsg = [ reportmsg thismsg newline ];
+  end
+
+
+  % Test my functions against the built-in function, with a fixed bin count.
+
+  binedges = linspace(0, 1, entropy_builtin_bins);
+
+  if have_entropy
+    thismsg = '-- Vs built-in "entropy" function:';
+    disp(thismsg);
+    reportmsg = [ reportmsg thismsg newline ];
+
+    for didx = 1:datacount_alldim
+      thisdata = datasets_alldim{didx,1};
+      datalabel = datasets_alldim{didx,2};
+      datatitle = datasets_alldim{didx,3};
+
+      thismsg = '';
+
+      % The built-in "entropy" function expects data in the range 0..1.
+      % This uses 256 bins with linear spacing.
+      thisentropy = entropy( thisdata );
+      thismsg = [ thismsg sprintf( '  %6.2f (matlab)', thisentropy ) ];
+
+      [ bincounts scratch ] = histcounts( reshape(thisdata,1,[]), binedges );
+      thisentropy = cEn_calcShannonHist( bincounts );
+      thismsg = [ thismsg sprintf( '  %6.2f (my lib)', thisentropy ) ];
+
+      [ thisentropy scratch ] = ...
+        cEn_calcExtrapShannon( thisdata, binedges, struct() );
+      thismsg = [ thismsg sprintf( '  %6.2f (extrap)', thisentropy ) ];
+
+      thismsg = [ thismsg '   ' datatitle ];
+
+      disp(thismsg);
+      reportmsg = [ reportmsg thismsg newline ];
+    end
   end
 
   thismsg = '== End of Shannon entropy report.';
@@ -84,7 +113,12 @@ if want_test_conditional
     [ thisbinned scratch ] = cEn_getBinnedMultivariate( thisdata, histbins );
     thisentropy = cEn_calcConditionalShannonHist( thisbinned );
 
-    thismsg = [ thismsg sprintf( '  %6.2f', thisentropy ) ];
+    thismsg = [ thismsg sprintf( '  %6.2f (raw)', thisentropy ) ];
+
+    [ thisentropy scratch ] = ...
+      cEn_calcExtrapConditionalShannon( thisdata, histbins, struct() );
+
+    thismsg = [ thismsg sprintf( '  %6.2f (extrap)', thisentropy ) ];
 
     thismsg = [ thismsg '   ' datatitle ];
 

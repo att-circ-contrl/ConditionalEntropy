@@ -34,26 +34,17 @@ nsamples = size(dataseries,2);
 % Make sure we have bin counts _and_ edge lists.
 
 if iscell(bins)
+  % We were given edge lists.
   edges = bins;
-  numbins = [];
-
-  for cidx = 1:nchans
-    numbins(cidx) = length(edges{cidx}) - 1;
-  end
 else
-  edges = {};
-  numbins = bins;
+  % We were given one or more bin counts; generate edge lists.
+  edges = cEn_getMultivariateHistBins( dataseries, bins );
+end
 
-  % Turn numbins into a vector if it isn't one already.
-  if length(numbins) < nchans
-    numbins = ones([1 nchans]) * numbins(1);
-  end
-
-  % Generate bin edges.
-  for cidx = 1:nchans
-    thisdata = dataseries(cidx,:);
-    edges{cidx} = cEn_getHistBinsEqPop( thisdata, numbins(cidx) );
-  end
+% Generate bin counts from the edge lists.
+numbins = [];
+for cidx = 1:nchans
+  numbins(cidx) = length(edges{cidx}) - 1;
 end
 
 

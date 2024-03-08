@@ -16,13 +16,13 @@ function bits = cEn_calcExtrapShannon( dataseries, edges, exparams )
 %
 % This needs a large number of samples to generate accurate results. To
 % compensate for smaller sample counts, this uses the extrapolation method
-% described in cEn_calcExtrapWrapper().
+% described in EXTRAPOLATION.txt.
 %
 % "dataseries" is a vector or matrix containing data samples. Dimensionality
 %   is ignored (all samples are processed).
 % "edges" is a vector of length (numbins+1) containing histogram bin edges.
 % "exparams" is a structure containing extrapolation tuning parameters, per
-%   cEn_calcExtrapWrapper. This may be empty.
+%   EXTRAPOLATION.txt. This may be empty.
 %
 % "bits" is a scalar with the average Shannon entropy of an observation.
 

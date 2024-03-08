@@ -10,14 +10,14 @@ function bits = ...
 %
 % This needs a large number of samples to generate accurate results. To
 % compensate for smaller sample counts, this uses the extrapolation method
-% described in cEn_calcExtrapWrapper().
+% described in EXTRAPOLATION.txt.
 %
 % "dataseries" is a (Nchans,Nsamples) matrix containing several data series.
 %   The first series (chan = 1) is the variable Y; remaining series are X_k.
 % "numbins" is either a vector of length Nchans or a scalar, indicating how
 %   many histogram bins to use for each channel's data.
 % "exparams" is a structure containing extrapolation tuning parameters, per
-%   cEn_calcExtrapWrapper. This may be empty.
+%   EXTRAPOLATION.txt. This may be empty.
 %
 % "bits" is a scalar with the average additional entropy provided by an
 %   observation of Y, when all X_k are known.

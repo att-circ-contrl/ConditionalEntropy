@@ -139,5 +139,95 @@ if want_test_conditional
 end
 
 
+if want_test_transfer
+
+  laglist = [ (-te_max_shift) : te_max_shift ];
+  lagcount = length(laglist);
+
+  reportmsg = '';
+
+  thismsg = '== Transfer entropy report begins.';
+  disp(thismsg);
+  reportmsg = [ reportmsg thismsg newline ];
+
+  thismsg = '-- Transfer entropy between two channels.';
+  disp(thismsg);
+  reportmsg = [ reportmsg thismsg newline ];
+
+  caselist = {};
+  casecount = datacount_te_2ch;
+  tetable_raw = nan([ lagcount, casecount ]);
+  tetable_ext = nan(size(tetable_raw));
+
+  for didx = 1:datacount_te_2ch
+    thisdata = datasets_te_2ch{didx,1};
+    datalabel = datasets_te_2ch{didx,2};
+    datatitle = datasets_te_2ch{didx,3};
+
+    thismsg = '';
+    tic;
+
+    dstseries = thisdata(1,:);
+    srcseries = thisdata(2,:);
+
+    telist_raw = cEn_calcExtrapTransferEntropy( ...
+      srcseries, dstseries, laglist, histbins, ...
+      cEn_getNoExtrapWrapperParams() );
+
+    telist_ext = cEn_calcExtrapTransferEntropy( ...
+      srcseries, dstseries, laglist, histbins, struct() );
+
+    durstring = helper_makePrettyTime(toc);
+    disp([ '.. Computed "' datatitle '" TE in ' durstring '.' ]);
+
+    caselist{didx} = datatitle;
+    tetable_raw(:,didx) = telist_raw;
+    tetable_ext(:,didx) = telist_ext;
+  end
+
+  thismsg = sprintf('%5s ', 'Lag');
+  for cidx = 1:casecount
+    thismsg = [ thismsg sprintf('%14s   ', caselist{cidx} ) ];
+  end
+  disp(thismsg);
+  reportmsg = [ reportmsg thismsg newline ];
+
+  for lidx = 1:lagcount
+    thismsg = sprintf('%4d  ', laglist(lidx));
+    for cidx = 1:casecount
+      thismsg = [ thismsg sprintf('  %5.2f r %5.2f e', ...
+        tetable_raw(lidx,cidx), tetable_ext(lidx,cidx) ) ];
+    end
+    disp(thismsg);
+    reportmsg = [ reportmsg thismsg newline ];
+  end
+
+  thismsg = '-- Partial transfer entropy (three channels).';
+  disp(thismsg);
+  reportmsg = [ reportmsg thismsg newline ];
+
+  for didx = 1:datacount_te_3ch
+    thisdata = datasets_te_3ch{didx,1};
+    datalabel = datasets_te_3ch{didx,2};
+    datatitle = datasets_te_3ch{didx,3};
+
+    thismsg = '';
+
+    thismsg = [ thismsg '   ' datatitle ];
+
+    disp(thismsg);
+    reportmsg = [ reportmsg thismsg newline ];
+  end
+
+  thismsg = '== End of Conditional entropy report.';
+  disp(thismsg);
+  reportmsg = [ reportmsg thismsg newline ];
+
+  helper_writeTextFile( [ outdir filesep 'report-conditional.txt' ], ...
+    reportmsg );
+
+end
+
+
 %
 % This is the end of the file.

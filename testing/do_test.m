@@ -40,8 +40,12 @@ if want_test_entropy
     thisentropy = cEn_calcShannonHist( bincounts );
     thismsg = [ thismsg sprintf( '  %6.2f (my lib)', thisentropy ) ];
 
-    [ thisentropy scratch ] = ...
-      cEn_calcExtrapShannon( thisdata, binedges, struct() );
+    % Test that extrapolation can fall back to non-extrapolated.
+    thisentropy = cEn_calcExtrapShannon( thisdata, binedges, ...
+        cEn_getNoExtrapWrapperParams() );
+    thismsg = [ thismsg sprintf( '  %6.2f (ex1)', thisentropy ) ];
+
+    thisentropy = cEn_calcExtrapShannon( thisdata, binedges, struct() );
     thismsg = [ thismsg sprintf( '  %6.2f (extrap)', thisentropy ) ];
 
     thismsg = [ thismsg '   ' datatitle ];
@@ -76,8 +80,7 @@ if want_test_entropy
       thisentropy = cEn_calcShannonHist( bincounts );
       thismsg = [ thismsg sprintf( '  %6.2f (my lib)', thisentropy ) ];
 
-      [ thisentropy scratch ] = ...
-        cEn_calcExtrapShannon( thisdata, binedges, struct() );
+      thisentropy = cEn_calcExtrapShannon( thisdata, binedges, struct() );
       thismsg = [ thismsg sprintf( '  %6.2f (extrap)', thisentropy ) ];
 
       thismsg = [ thismsg '   ' datatitle ];
@@ -115,7 +118,7 @@ if want_test_conditional
 
     thismsg = [ thismsg sprintf( '  %6.2f (raw)', thisentropy ) ];
 
-    [ thisentropy scratch ] = ...
+    thisentropy = ...
       cEn_calcExtrapConditionalShannon( thisdata, histbins, struct() );
 
     thismsg = [ thismsg sprintf( '  %6.2f (extrap)', thisentropy ) ];

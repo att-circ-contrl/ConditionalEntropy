@@ -1,7 +1,7 @@
-function [ bits extuning ] = ...
+function bits = ...
   cEn_calcExtrapConditionalShannon( dataseries, numbins, exparams )
 
-% function [ bits extuning ] = ...
+% function bits = ...
 %   cEn_calcExtrapConditionalShannon( dataseries, numbins, exparams )
 %
 % This calculates the conditional entropy associated with a set of signals.
@@ -21,7 +21,6 @@ function [ bits extuning ] = ...
 %
 % "bits" is a scalar with the average additional entropy provided by an
 %   observation of Y, when all X_k are known.
-% "extuning" is a copy of "exparams" with all missing fields filled in.
 
 
 % Use consistent bin definitions.
@@ -31,7 +30,7 @@ edges = cEn_getMultivariateHistBins( dataseries, numbins );
 % Wrap the binning and conditional entropy calculation functions.
 datafunc = @(funcdata) helper_calcConditionalShannon( funcdata, edges );
 
-[ bits extuning ] = cEn_calcExtrapWrapper( dataseries, datafunc, exparams );
+bits = cEn_calcExtrapWrapper( dataseries, datafunc, exparams );
 
 
 % Done.

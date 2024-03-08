@@ -1,0 +1,34 @@
+Extrapolation (via cEn_calcExtrapWrapper) attempts to curve fit the output
+of a data processing function (typically an entropy calculation function)
+at various small sample counts to estimate the output at large sample counts.
+
+
+Extrapolation is performed using the method described in Palmigiano 2017,
+which is based on the method described in Strong 1998, which is based on
+the analysis performed in Treves 1995:
+
+(Palmigiano 2017) "Flexible Information Routing by Transient Synchrony"
+(Strong 1998) "Entropy and Information in Neural Spike Trains"
+(Treves 1995) "The Upward Bias in Measures of Information Derived From
+  Limited Data Samples"
+
+
+For several values of N, M subsets of size (nsamples/N) are selected from
+the sample data. The entropy calculation is run on these M subsets and the
+results averaged, producing a result for the chosen value of N. A
+A quadratic fit is performed to the results (as a function of N), and the
+Y intercept (N = 0) is taken as the estimated infinite-length output.
+
+
+An "extrapolation parameter structure" is a structure with the following
+fields:
+
+"divisors" is a vector containing divisors for nsamples.   Default: [1:10]
+"testcount" is the number of tests to average for each divisor.   Default: 3
+
+NOTE - If there are fewer than three divisors, the order of the curve fit
+will be reduced. A noteworthy use of this is divisors = [ 1 ], testcount
+= 1 to return the calculation result without extrapolation.
+
+
+(This is the end of the file.)

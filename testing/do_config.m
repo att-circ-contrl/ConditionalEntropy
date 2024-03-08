@@ -6,7 +6,8 @@
 % Switches.
 
 want_test_entropy = true;
-want_test_conditional = false;
+want_test_conditional = true;
+want_test_transfer = true;
 
 
 %
@@ -16,12 +17,26 @@ size1d = 100000;
 size2d = 300;
 histbins = 32;
 
+te_max_shift = 10;
+
 
 %
 % Library support.
 
 have_entropy = exist('entropy');
 entropy_builtin_bins = 256;
+
+
+%
+% Folders.
+
+outdir = 'output';
+
+
+%
+% Miscellaneous constants.
+
+newline = sprintf('\n');
 
 
 %
@@ -72,7 +87,7 @@ datasets_2d = ...
   data_2d_ramp,    'ramp2',  '2D Ramp' ; ...
   data_2d_para,    'para2',  '2D Parabola' ; ...
   data_2d_norm,    'norm2',  '2D Normal' ; ...
-  data_2d_unirand, 'urand2', '2D Uniform Random' };
+  data_2d_unirand, 'urand2', '2D Unif Random' };
 datacount_2d = size(datasets_2d, 1);
 
 datasets_alldim = [ datasets_1d ; datasets_2d ];
@@ -104,15 +119,42 @@ datacount_conditional = size(datasets_cond, 1);
 
 
 %
-% Folders.
+% Shifted multi-channel data series (for transfer entropy).
 
-outdir = 'output';
+te_test_shift = round(te_max_shift * 0.5);
 
+data_1d_noisyramp_u = 0.5 * (data_1d_ramp + data_1d_unirand);
 
-%
-% Miscellaneous constants.
+data_te_2ch_indep = [ data_1d_noisyramp_u ; data_1d_unirand ];
+data_te_2ch_self = [ data_1d_noisyramp_u ; ...
+  circshift( data_1d_noisyramp_u, te_test_shift ) ];
+data_te_2ch_pos = [ data_1d_noisyramp_u ; ...
+  circshift( data_1d_noisyramp1, te_test_shift ) ];
+data_te_2ch_neg = [ data_1d_noisyramp_u ; ...
+  circshift( data_1d_noisyramp1, -te_test_shift ) ];
 
-newline = sprintf('\n');
+data_te_3ch_weak = [ data_1d_noisyramp_u ; ...
+  circshift( data_1d_noisyramp1, te_test_shift ) ; ...
+  circshift( data_1d_noisyramp2, -te_test_shift ) ];
+data_te_3ch_olap = [ data_1d_noisyramp_u ; ...
+  circshift( data_1d_noisyramp1, te_test_shift ) ; ...
+  circshift( data_1d_noisyramp2, te_test_shift ) ];
+data_te_3ch_self = [ data_1d_noisyramp_u ; ...
+  circshift( data_1d_noisyramp1, te_test_shift ) ; ...
+  circshift( data_1d_noisyramp_u, te_test_shift ) ];
+
+datasets_te_2ch = ...
+{ data_te_2ch_indep, 'te2indep', '2ch None' ; ...
+  data_te_2ch_self,  'te2self',  '2ch Self' ; ...
+  data_te_2ch_pos,   'te2pos',   '2ch Pos Lag' ; ...
+  data_te_2ch_neg,   'te2neg',   '2ch Neg Lag' };
+datacount_te_2ch = size(datasets_te_2ch, 1);
+
+datasets_te_3ch = ...
+{ data_te_3ch_weak, 'te3weak', '3ch Weak' ; ...
+  data_te_3ch_olap, 'te3olap', '3ch Aligned' ; ...
+  data_te_3ch_self, 'te3self', '3ch Self' };
+datacount_te_3ch = size(datasets_te_3ch, 1);
 
 
 %

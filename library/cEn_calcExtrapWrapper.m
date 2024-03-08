@@ -1,8 +1,6 @@
-function [ outval extuning ] = ...
-  cEn_calcExtrapWrapper( dataseries, datafunc, exparams )
+function outval = cEn_calcExtrapWrapper( dataseries, datafunc, exparams )
 
-% function [ outval extuning ] = ...
-%   cEn_calcExtrapWrapper( dataseries, datafunc, exparams )
+% function outval = cEn_calcExtrapWrapper( dataseries, datafunc, exparams )
 %
 % This calls a user-supplied function to process data (typically an
 % entropy-calculation function). Results at low sample counts are
@@ -23,6 +21,10 @@ function [ outval extuning ] = ...
 % A quadratic fit is performed to the results (as a function of N), and the
 % Y intercept (N = 0) is taken as the estimated infinite-length output.
 %
+% NOTE - If there are fewer than three divisors, the order of the curve fit
+% will be reduced. A noteworthy use of this is divisors = [ 1 ], testcount
+% = 1 to return the calculation result without extrapolation.
+%
 % "dataseries" is a (Nchans,Nsamples) matrix containing several data series.
 % "datafunc" is a function handle, accepting one argument (the data series).
 %   This function has the form:
@@ -35,36 +37,12 @@ function [ outval extuning ] = ...
 %   "testcount" is the number of tests to average for each divisor. Default: 3
 %
 % "outval" is the extrapolated output of "datafunc".
-% "extuning" is a copy of "exparams" with all missing fields filled in.
 
 
 %
 % Check tuning parameters and fill in defaults.
 
-if isempty(exparams)
-  exparams = struct();
-end
-
-if ~isfield(exparams, 'divisors')
-  exparams.divisors = 1:10;
-end
-
-if ~isfield(exparams, 'testcount')
-  exparams.testcount = 3;
-end
-
-% Force sanity.
-% We get sorting for free here.
-divisors = round(exparams.divisors);
-divisors = unique(divisors);
-divisors = divisors( divisors > 0 );
-if isempty(divisors)
-  divisors = 1;
-end
-exparams.divisors = divisors;
-
-% Save the resulting tuning parameter structure.
-extuning = exparams;
+exparams = cEn_fillExtrapWrapperParams( exparams );
 
 
 %
@@ -74,6 +52,7 @@ chancount = size(dataseries,1);
 sampcount = size(dataseries,2);
 
 testcount = exparams.testcount;
+divisors = exparams.divisors;
 
 % We want descending order.
 % This should already be sorted, but re-sort anyways.
@@ -122,7 +101,12 @@ end
 %
 % Extrapolate to N = 0.
 
-p = polyfit(divisors, outlist, 2);
+% If we have fewer than 3 divisors, reduce the polynomial order.
+% This works even for order 0 (one divisor, constant output).
+porder = length(divisors) - 1;
+porder = min(porder, 2);
+
+p = polyfit(divisors, outlist, porder);
 outval = polyval(p, 0);
 
 

@@ -13,7 +13,7 @@ want_test_transfer = true;
 %
 % Geometry.
 
-size1d = 10000;
+size1d = 100000;
 size2d = round(sqrt(size1d));
 histbins = 32;
 

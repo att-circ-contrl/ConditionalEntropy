@@ -4,7 +4,7 @@ function telist = cEn_calcExtrapTransferEntropy( ...
 % function telist = cEn_calcExtrapTransferEntropy( ...
 %   srcseries, dstseries, laglist, numbins, exparams )
 %
-% This calculates the transfer entropy from Dst to Src, for a specified set
+% This calculates the transfer entropy from Src to Dst, for a specified set
 % of time lags.
 %
 % NOTE - This needs a large number of samples to generate accurate results!
@@ -91,6 +91,7 @@ for lidx = 1:length(laglist)
 
   % NOTE - Palmigiano 2017 took the difference and then extrapolated (I think).
   % Offer the option of doing the extrapolation and then the subtraction.
+  % These give very similar output in my tests.
 
   if false
     % Subtract and then extrapolate, per Palmigiano 2017.

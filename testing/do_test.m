@@ -150,6 +150,9 @@ if want_test_transfer
   disp(thismsg);
   reportmsg = [ reportmsg thismsg newline ];
 
+
+  % Two-channel cases: Standard TE.
+
   thismsg = '-- Transfer entropy between two channels.';
   disp(thismsg);
   reportmsg = [ reportmsg thismsg newline ];
@@ -202,9 +205,19 @@ if want_test_transfer
     reportmsg = [ reportmsg thismsg newline ];
   end
 
+
+  % Three-channel cases: Partial TE.
+
   thismsg = '-- Partial transfer entropy (three channels).';
   disp(thismsg);
   reportmsg = [ reportmsg thismsg newline ];
+
+  caselist = {};
+  casecount = datacount_te_3ch;
+  tetable1_raw = nan([ lagcount, casecount ]);
+  tetable1_ext = nan(size(tetable_raw));
+  tetable2_raw = nan([ lagcount, casecount ]);
+  tetable2_ext = nan(size(tetable_raw));
 
   for didx = 1:datacount_te_3ch
     thisdata = datasets_te_3ch{didx,1};
@@ -212,12 +225,61 @@ if want_test_transfer
     datatitle = datasets_te_3ch{didx,3};
 
     thismsg = '';
+    tic;
 
-    thismsg = [ thismsg '   ' datatitle ];
+    dstseries = thisdata(1,:);
+    src1series = thisdata(2,:);
+    src2series = thisdata(3,:);
+
+    [ telist1_raw telist2_raw ] = cEn_calcExtrapPartialTE( ...
+      src1series, src2series, dstseries, laglist, histbins, ...
+      cEn_getNoExtrapWrapperParams() );
+
+    [ telist1_ext telist2_ext ] = cEn_calcExtrapPartialTE( ...
+      src1series, src2series, dstseries, laglist, histbins, struct() );
+
+    durstring = helper_makePrettyTime(toc);
+    disp([ '.. Computed "' datatitle '" partial TE in ' durstring '.' ]);
+
+    caselist{didx} = datatitle;
+    tetable1_raw(:,didx) = telist1_raw;
+    tetable1_ext(:,didx) = telist1_ext;
+    tetable2_raw(:,didx) = telist2_raw;
+    tetable2_ext(:,didx) = telist2_ext;
 
     disp(thismsg);
     reportmsg = [ reportmsg thismsg newline ];
   end
+
+  table1msg = [ '-- pTE from src1 to dst:' newline ];
+  table2msg = [ '-- pTE from src2 to dst:' newline ];
+
+  thismsg = sprintf('%5s ', 'Lag');
+  for cidx = 1:casecount
+    thismsg = [ thismsg sprintf('%14s   ', caselist{cidx} ) ];
+  end
+  table1msg = [ table1msg thismsg newline ];
+  table2msg = [ table2msg thismsg newline ];
+
+  for lidx = 1:lagcount
+    thismsg1 = sprintf('%4d  ', laglist(lidx));
+    thismsg2 = thismsg1;
+
+    for cidx = 1:casecount
+      thismsg1 = [ thismsg1 sprintf('  %5.2f r %5.2f e', ...
+        tetable1_raw(lidx,cidx), tetable1_ext(lidx,cidx) ) ];
+      thismsg2 = [ thismsg2 sprintf('  %5.2f r %5.2f e', ...
+        tetable2_raw(lidx,cidx), tetable2_ext(lidx,cidx) ) ];
+    end
+
+    table1msg = [ table1msg thismsg1 newline ];
+    table2msg = [ table2msg thismsg2 newline ];
+  end
+
+  disp(table1msg);
+  disp(table2msg);
+  % The table messages already have newlines.
+  reportmsg = [ reportmsg table1msg table2msg ];
 
   thismsg = '== End of Conditional entropy report.';
   disp(thismsg);

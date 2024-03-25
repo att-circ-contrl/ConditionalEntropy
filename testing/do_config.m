@@ -17,8 +17,8 @@ want_test_transfer = false;
 sampcount = 10000;
 histbins = 32;
 
-te_max_shift = 10;
-te_test_shift = 5;
+te_laglist = [-10:10];
+te_test_lag = 5;
 
 swept_histbins = [ 8 16 32 ];
 

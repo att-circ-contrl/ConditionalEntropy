@@ -18,7 +18,7 @@ do_config;
 datasets_entropy = helper_makeDatasetsShannon(sampcount);
 datasets_mutual = helper_makeDatasetsMutual(sampcount);
 [ datasets_te_2ch datasets_te_3ch ] = ...
-  helper_makeDatasetsTransfer(sampcount, te_test_shift);
+  helper_makeDatasetsTransfer(sampcount, te_test_lag);
 
 
 if want_test_entropy
@@ -197,8 +197,7 @@ end
 
 if want_test_transfer
 
-  laglist = [ (-te_max_shift) : te_max_shift ];
-  lagcount = length(laglist);
+  lagcount = length(te_laglist);
 
   reportmsg = '';
 
@@ -232,11 +231,11 @@ if want_test_transfer
     srcseries = thisdata(2,:);
 
     telist_raw = cEn_calcExtrapTransferEntropy( ...
-      srcseries, dstseries, laglist, histbins, ...
+      srcseries, dstseries, te_laglist, histbins, ...
       cEn_getNoExtrapWrapperParams() );
 
     telist_ext = cEn_calcExtrapTransferEntropy( ...
-      srcseries, dstseries, laglist, histbins, struct() );
+      srcseries, dstseries, te_laglist, histbins, struct() );
 
     durstring = helper_makePrettyTime(toc);
     disp([ '.. Computed "' datatitle '" TE in ' durstring '.' ]);
@@ -254,7 +253,7 @@ if want_test_transfer
   reportmsg = [ reportmsg thismsg newline ];
 
   for lidx = 1:lagcount
-    thismsg = sprintf('%4d  ', laglist(lidx));
+    thismsg = sprintf('%4d  ', te_laglist(lidx));
     for cidx = 1:casecount
       thismsg = [ thismsg sprintf('  %5.2f r %5.2f e', ...
         tetable_raw(lidx,cidx), tetable_ext(lidx,cidx) ) ];
@@ -292,11 +291,11 @@ if want_test_transfer
     src2series = thisdata(3,:);
 
     [ telist1_raw telist2_raw ] = cEn_calcExtrapPartialTE( ...
-      src1series, src2series, dstseries, laglist, histbins, ...
+      src1series, src2series, dstseries, te_laglist, histbins, ...
       cEn_getNoExtrapWrapperParams() );
 
     [ telist1_ext telist2_ext ] = cEn_calcExtrapPartialTE( ...
-      src1series, src2series, dstseries, laglist, histbins, struct() );
+      src1series, src2series, dstseries, te_laglist, histbins, struct() );
 
     durstring = helper_makePrettyTime(toc);
     disp([ '.. Computed "' datatitle '" partial TE in ' durstring '.' ]);
@@ -322,7 +321,7 @@ if want_test_transfer
   table2msg = [ table2msg thismsg newline ];
 
   for lidx = 1:lagcount
-    thismsg1 = sprintf('%4d  ', laglist(lidx));
+    thismsg1 = sprintf('%4d  ', te_laglist(lidx));
     thismsg2 = thismsg1;
 
     for cidx = 1:casecount

@@ -12,7 +12,13 @@ do_config;
 
 
 %
-% Tests.
+% Fixed-size tests.
+
+
+datasets_entropy = helper_makeDatasetsShannon(sampcount);
+datasets_mutual = helper_makeDatasetsMutual(sampcount);
+[ datasets_te_2ch datasets_te_3ch ] = ...
+  helper_makeDatasetsTransfer(sampcount, te_test_shift);
 
 
 if want_test_entropy
@@ -23,16 +29,20 @@ if want_test_entropy
   reportmsg = [ reportmsg thismsg newline ];
 
 
+  datasets = datasets_entropy;
+  datacount = size(datasets,1);
+
+
   % Test my functions with my bin counts.
 
   % NOTE - Equal-population bins should give entropy of log2(histbins).
   % This will occur for the linear and uniform random test cases.
   binedges = linspace(0, 1, histbins);
 
-  for didx = 1:datacount_alldim
-    thisdata = datasets_alldim{didx,1};
-    datalabel = datasets_alldim{didx,2};
-    datatitle = datasets_alldim{didx,3};
+  for didx = 1:datacount;
+    thisdata = datasets{didx,1};
+    datalabel = datasets{didx,2};
+    datatitle = datasets{didx,3};
 
     thismsg = '';
 
@@ -64,10 +74,10 @@ if want_test_entropy
     disp(thismsg);
     reportmsg = [ reportmsg thismsg newline ];
 
-    for didx = 1:datacount_alldim
-      thisdata = datasets_alldim{didx,1};
-      datalabel = datasets_alldim{didx,2};
-      datatitle = datasets_alldim{didx,3};
+    for didx = 1:datacount
+      thisdata = datasets{didx,1};
+      datalabel = datasets{didx,2};
+      datatitle = datasets{didx,3};
 
       thismsg = '';
 
@@ -106,10 +116,13 @@ if want_test_conditional
   disp(thismsg);
   reportmsg = [ reportmsg thismsg newline ];
 
-  for didx = 1:datacount_conditional
-    thisdata = datasets_cond{didx,1};
-    datalabel = datasets_cond{didx,2};
-    datatitle = datasets_cond{didx,3};
+  datasets = datasets_mutual;
+  datacount = size(datasets,1);
+
+  for didx = 1:datacount
+    thisdata = datasets{didx,1};
+    datalabel = datasets{didx,2};
+    datatitle = datasets{didx,3};
 
     thismsg = '';
 
@@ -146,11 +159,14 @@ if want_test_mutual
   disp(thismsg);
   reportmsg = [ reportmsg thismsg newline ];
 
+  datasets = datasets_mutual;
+  datacount = size(datasets,1);
+
   % Use the conditional entropy test cases for mutual information.
-  for didx = 1:datacount_conditional
-    thisdata = datasets_cond{didx,1};
-    datalabel = datasets_cond{didx,2};
-    datatitle = datasets_cond{didx,3};
+  for didx = 1:datacount
+    thisdata = datasets{didx,1};
+    datalabel = datasets{didx,2};
+    datatitle = datasets{didx,3};
 
     thismsg = '';
 
@@ -197,12 +213,14 @@ if want_test_transfer
   disp(thismsg);
   reportmsg = [ reportmsg thismsg newline ];
 
+  datacount = size(datasets_te_2ch,1);
+
   caselist = {};
-  casecount = datacount_te_2ch;
+  casecount = datacount;
   tetable_raw = nan([ lagcount, casecount ]);
   tetable_ext = nan(size(tetable_raw));
 
-  for didx = 1:datacount_te_2ch
+  for didx = 1:datacount
     thisdata = datasets_te_2ch{didx,1};
     datalabel = datasets_te_2ch{didx,2};
     datatitle = datasets_te_2ch{didx,3};
@@ -252,14 +270,16 @@ if want_test_transfer
   disp(thismsg);
   reportmsg = [ reportmsg thismsg newline ];
 
+  datacount = size(datasets_te_3ch,1);
+
   caselist = {};
-  casecount = datacount_te_3ch;
+  casecount = datacount;
   tetable1_raw = nan([ lagcount, casecount ]);
   tetable1_ext = nan(size(tetable_raw));
   tetable2_raw = nan([ lagcount, casecount ]);
   tetable2_ext = nan(size(tetable_raw));
 
-  for didx = 1:datacount_te_3ch
+  for didx = 1:datacount
     thisdata = datasets_te_3ch{didx,1};
     datalabel = datasets_te_3ch{didx,2};
     datatitle = datasets_te_3ch{didx,3};

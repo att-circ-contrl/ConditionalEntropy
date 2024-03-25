@@ -129,11 +129,51 @@ if want_test_conditional
     reportmsg = [ reportmsg thismsg newline ];
   end
 
-  thismsg = '== End of Conditional entropy report.';
+  thismsg = '== End of conditional entropy report.';
   disp(thismsg);
   reportmsg = [ reportmsg thismsg newline ];
 
   helper_writeTextFile( [ outdir filesep 'report-conditional.txt' ], ...
+    reportmsg );
+
+end
+
+
+if want_test_mutual
+
+  reportmsg = '';
+  thismsg = '== Mutual information report begins.';
+  disp(thismsg);
+  reportmsg = [ reportmsg thismsg newline ];
+
+  % Use the conditional entropy test cases for mutual information.
+  for didx = 1:datacount_conditional
+    thisdata = datasets_cond{didx,1};
+    datalabel = datasets_cond{didx,2};
+    datatitle = datasets_cond{didx,3};
+
+    thismsg = '';
+
+    [ thisbinned scratch ] = cEn_getBinnedMultivariate( thisdata, histbins );
+    thismutual = cEn_calcMutualInfoHist( thisbinned );
+
+    thismsg = [ thismsg sprintf( '  %6.2f (raw)', thismutual ) ];
+
+    thismutual = cEn_calcExtrapMutualInfo( thisdata, histbins, struct() );
+
+    thismsg = [ thismsg sprintf( '  %6.2f (extrap)', thismutual ) ];
+
+    thismsg = [ thismsg '   ' datatitle ];
+
+    disp(thismsg);
+    reportmsg = [ reportmsg thismsg newline ];
+  end
+
+  thismsg = '== End of mutual information report.';
+  disp(thismsg);
+  reportmsg = [ reportmsg thismsg newline ];
+
+  helper_writeTextFile( [ outdir filesep 'report-mutual.txt' ], ...
     reportmsg );
 
 end
@@ -281,7 +321,7 @@ if want_test_transfer
   % The table messages already have newlines.
   reportmsg = [ reportmsg table1msg table2msg ];
 
-  thismsg = '== End of Conditional entropy report.';
+  thismsg = '== End of transfer entropy report.';
   disp(thismsg);
   reportmsg = [ reportmsg thismsg newline ];
 

@@ -6,14 +6,15 @@
 % Switches.
 
 want_test_entropy = false;
-want_test_conditional = false;
-want_test_transfer = true;
+want_test_conditional = true;
+want_test_mutual = true;
+want_test_transfer = false;
 
 
 %
 % Geometry.
 
-size1d = 100000;
+size1d = 10000;
 size2d = round(sqrt(size1d));
 histbins = 32;
 
@@ -108,13 +109,15 @@ data_2ch_uncorr = [ data_1d_ramp ; data_1d_unirand ];
 
 data_3ch_onecorr = [ data_1d_ramp ; data_1d_noisyramp1 ; data_1d_unirand ];
 data_3ch_bothcorr = [ data_1d_ramp; data_1d_noisyramp1; data_1d_noisyramp2 ];
+data_3ch_uncorr = [ data_1d_ramp ; data_1d_noise1 ; data_1d_noise2 ];
 
 datasets_cond = ...
 { data_2ch_corr,     'cond2corr',  '2ch Strong' ; ...
   data_2ch_semicorr, 'cond2semi',  '2ch Weak' ; ...
   data_2ch_uncorr,   'cond2indep', '2ch None' ; ...
   data_3ch_onecorr,  'cond3one',   '3ch One' ; ...
-  data_3ch_bothcorr, 'cond3both',  '3ch Both' };
+  data_3ch_bothcorr, 'cond3both',  '3ch Both' ; ...
+  data_3ch_uncorr, 'cond3indep',  '3ch None' };
 datacount_conditional = size(datasets_cond, 1);
 
 

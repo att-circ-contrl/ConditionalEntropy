@@ -12,6 +12,7 @@ force: clean run
 
 clean:
 	rm -f output/*
+	rm -f plots/*
 
 checkdirs:
 	./checkdirs.sh

@@ -21,7 +21,7 @@ datasets_mutual = helper_makeDatasetsMutual(sampcount);
   helper_makeDatasetsTransfer(sampcount, te_test_lag);
 
 
-if want_test_entropy
+if want_test_entropy && want_nonswept
 
   reportmsg = '';
   thismsg = '== Shannon entropy report begins.';
@@ -109,7 +109,7 @@ if want_test_entropy
 end
 
 
-if want_test_conditional
+if want_test_conditional && want_nonswept
 
   reportmsg = '';
   thismsg = '== Conditional entropy report begins.';
@@ -152,7 +152,7 @@ if want_test_conditional
 end
 
 
-if want_test_mutual
+if want_test_mutual && want_nonswept
 
   reportmsg = '';
   thismsg = '== Mutual information report begins.';
@@ -195,7 +195,7 @@ if want_test_mutual
 end
 
 
-if want_test_transfer
+if want_test_transfer && want_nonswept
 
   lagcount = length(te_laglist);
 
@@ -348,6 +348,201 @@ if want_test_transfer
     reportmsg );
 
 end
+
+
+
+%
+% Swept tests.
+
+
+if want_sweep_sampcount
+
+  if ~want_sweep_histbins
+    swept_histbins = [ histbins ];
+  end
+
+
+  % Get geometry.
+  sampsweepsize = length(swept_sampcounts);
+  binsweepsize = length(swept_histbins);
+  lagcount = length(te_laglist);
+
+
+  % Get lookup tables of case labels, from the non-swept data.
+
+  datalabels_entropy = datasets_entropy(:,2);
+  datatitles_entropy = datasets_entropy(:,3);
+  datasize_entropy = length(datalabels_entropy);
+
+  datalabels_mutual = datasets_mutual(:,2);
+  datatitles_mutual = datasets_mutual(:,3);
+  datasize_mutual = length(datalabels_mutual);
+
+  datalabels_te_2ch = datasets_te_2ch(:,2);
+  datatitles_te_2ch = datasets_te_2ch(:,3);
+  datasize_te_2ch = length(datalabels_te_2ch);
+
+  datalabels_te_3ch = datasets_te_3ch(:,2);
+  datatitles_te_3ch = datasets_te_3ch(:,3);
+  datasize_te_3ch = length(datalabels_te_3ch);
+
+
+  %
+  % Precompute the data before plotting. This makes life much easier, since
+  % we'd otherwise have to nest loops strangely.
+
+  entropyraw = nan([ sampsweepsize, binsweepsize, datasize_entropy ]);
+  entropyext = entropyraw;
+
+  conditionalraw = nan([ sampsweepsize, binsweepsize, datasize_mutual ]);
+  conditionalext = conditionalraw;
+
+  mutualraw = nan([ sampsweepsize, binsweepsize, datasize_mutual ]);
+  mutualext = mutualraw;
+
+  te2chraw = nan([ lagcount, sampsweepsize, binsweepsize, datasize_te_2ch ]);
+  te2chext = te2chraw;
+
+  te3chraw = nan([ lagcount, sampsweepsize, binsweepsize, datasize_te_3ch ]);
+  te3chext = te3chraw;
+
+  disp('== Beginning sample count sweep.');
+
+  for sidx = 1:sampsweepsize
+
+    thissampcount = swept_sampcounts(sidx);
+    prettysamps = helper_makePrettyCount( thissampcount );
+
+
+    % Entropy.
+
+    if want_test_entropy
+      thisdatasetlist = helper_makeDatasetsShannon( thissampcount );
+
+      tic;
+
+      for didx = 1:length(thisdatasetlist)
+        thisdata = thisdatasetlist{didx,1};
+        for bidx = 1:binsweepsize
+          binedges = linspace(0, 1, swept_histbins(bidx));
+          [ bincounts scratch ] = ...
+            histcounts( reshape(thisdata, 1, []), binedges );
+          entropyraw( sidx, bidx, didx ) = cEn_calcShannonHist( bincounts );
+          entropyext( sidx, bidx, didx ) = ...
+            cEn_calcExtrapShannon( thisdata, binedges, struct() );
+        end
+      end
+
+      durstring = helper_makePrettyTime(toc);
+      disp([ ' -- Shannon entropy for ' prettysamps ' samples took ' ...
+        durstring '.' ]);
+    end
+
+
+    % Conditional entropy.
+
+    if want_test_conditional
+      thisdatasetlist = helper_makeDatasetsMutual( thissampcount );
+
+      tic;
+
+      for didx = 1:length(thisdatasetlist)
+        thisdata = thisdatasetlist{didx,1};
+        for bidx = 1:binsweepsize
+          [ thisbinned scratch ] = ...
+            cEn_getBinnedMultivariate( thisdata, swept_histbins(bidx) );
+          conditionalraw( sidx, bidx, didx ) = ...
+            cEn_calcConditionalShannonHist( thisbinned );
+          conditionalext( sidx, bidx, didx ) = ...
+            cEn_calcExtrapConditionalShannon( ...
+              thisdata, swept_histbins(bidx), struct() );
+        end
+      end
+
+      durstring = helper_makePrettyTime(toc);
+      disp([ ' -- Conditional entropy for ' prettysamps ' samples took ' ...
+        durstring '.' ]);
+    end
+
+
+    % Mutual information.
+
+    if want_test_mutual
+      thisdatasetlist = helper_makeDatasetsMutual( thissampcount );
+
+      tic;
+
+      for didx = 1:length(thisdatasetlist)
+        thisdata = thisdatasetlist{didx,1};
+        for bidx = 1:binsweepsize
+          [ thisbinned scratch ] = ...
+            cEn_getBinnedMultivariate( thisdata, swept_histbins(bidx) );
+          mutualraw( sidx, bidx, didx ) = ...
+            cEn_calcMutualInfoHist( thisbinned );
+          mutualext( sidx, bidx, didx ) = cEn_calcExtrapMutualInfo( ...
+            thisdata, swept_histbins(bidx), struct() );
+        end
+      end
+
+      durstring = helper_makePrettyTime(toc);
+      disp([ ' -- Mutual information for ' prettysamps ' samples took ' ...
+        durstring '.' ]);
+    end
+
+    % Transfer entropy.
+% FIXME - TE NYI.
+
+    % Finished with this sample count.
+
+  end
+
+  disp('== Finished sample count sweep.');
+
+
+  %
+  % Plot the data.
+
+  % Everything except TE: Single plot per case, one curve per bin count.
+  % TE: One plot per bin count per case.
+
+  disp('== Generating sweep plots.');
+
+  if want_test_entropy
+    helper_plotSweptData( entropyraw, swept_sampcounts, swept_histbins, ...
+      datalabels_entropy, datatitles_entropy, 'Shannon Entropy (bits)', ...
+      'Entropy (raw)', [ plotdir filesep 'entropy-raw' ] );
+
+    helper_plotSweptData( entropyext, swept_sampcounts, swept_histbins, ...
+      datalabels_entropy, datatitles_entropy, 'Shannon Entropy (bits)', ...
+      'Entropy (extrap)', [ plotdir filesep 'entropy-ext' ] );
+  end
+
+  if want_test_conditional
+    helper_plotSweptData( conditionalraw, swept_sampcounts, swept_histbins, ...
+      datalabels_mutual, datatitles_mutual, 'Conditional Entropy (bits)', ...
+      'Conditional Entropy (raw)', [ plotdir filesep 'conditional-raw' ] );
+
+    helper_plotSweptData( conditionalext, swept_sampcounts, swept_histbins, ...
+      datalabels_mutual, datatitles_mutual, 'Conditional Entropy (bits)', ...
+      'Conditional Entropy (extrap)', [ plotdir filesep 'conditional-ext' ] );
+  end
+
+  if want_test_mutual
+    helper_plotSweptData( mutualraw, swept_sampcounts, swept_histbins, ...
+      datalabels_mutual, datatitles_mutual, 'Mutual Information (bits)', ...
+      'Mutual Information (raw)', [ plotdir filesep 'mutual-raw' ] );
+
+    helper_plotSweptData( mutualext, swept_sampcounts, swept_histbins, ...
+      datalabels_mutual, datatitles_mutual, 'Mutual Information (bits)', ...
+      'Mutual Information (extrap)', [ plotdir filesep 'mutual-ext' ] );
+  end
+
+  % FIXME - Plotting NYI.
+
+  disp('== Finished generating sweep plots.');
+
+end
+
 
 
 %

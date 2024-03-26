@@ -6,9 +6,9 @@
 % Switches.
 
 want_test_entropy = false;
-want_test_conditional = true;
-want_test_mutual = true;
-want_test_transfer = false;
+want_test_conditional = false;
+want_test_mutual = false;
+want_test_transfer = true;
 
 want_nonswept = false;
 
@@ -27,8 +27,9 @@ te_test_lag = 5;
 
 swept_histbins = [ 8 16 32 ];
 
-swept_sampcounts = [ 10000 30000 100000 ];
-swept_sampcounts = [ swept_sampcounts 300000 1000000 ];
+swept_sampcounts = [ 10000 ];
+swept_sampcounts = [ swept_sampcounts 30000 100000 ];
+%swept_sampcounts = [ swept_sampcounts 300000 1000000 ];
 %swept_sampcounts = [ swept_sampcounts 3000000 10000000 ];
 
 

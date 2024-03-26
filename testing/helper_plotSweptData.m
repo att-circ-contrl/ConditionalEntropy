@@ -53,7 +53,7 @@ for didx = 1:length(datalabels)
 
   hold off;
 
-  xlabel('sample count');
+  xlabel('Sample Count');
   ylabel(axistitle);
 
   set(gca, 'Xscale', 'log');

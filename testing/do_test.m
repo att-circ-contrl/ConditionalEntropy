@@ -403,8 +403,10 @@ if want_sweep_sampcount
   te2chraw = nan([ lagcount, sampsweepsize, binsweepsize, datasize_te_2ch ]);
   te2chext = te2chraw;
 
-  te3chraw = nan([ lagcount, sampsweepsize, binsweepsize, datasize_te_3ch ]);
-  te3chext = te3chraw;
+  te3ch1raw = nan([ lagcount, sampsweepsize, binsweepsize, datasize_te_3ch ]);
+  te3ch1ext = te3ch1raw;
+  te3ch2raw = te3ch1raw;
+  te3ch2ext = te3ch2raw;
 
   disp('== Beginning sample count sweep.');
 
@@ -489,8 +491,78 @@ if want_sweep_sampcount
         durstring '.' ]);
     end
 
+
     % Transfer entropy.
-% FIXME - TE NYI.
+
+    if want_test_transfer
+      [ thisdatasetlist_2ch thisdatasetlist_3ch ] = ...
+        helper_makeDatasetsTransfer( thissampcount, te_test_lag );
+
+      % 2-channel transfer entropy.
+
+      for didx = 1:length(thisdatasetlist_2ch)
+        thisdata = thisdatasetlist_2ch{didx,1};
+        datatitle = thisdatasetlist_2ch{didx,3};
+
+        dstseries = thisdata(1,:);
+        srcseries = thisdata(2,:);
+
+        tic;
+
+        for bidx = 1:binsweepsize
+          telist_raw = cEn_calcExtrapTransferEntropy( ...
+            srcseries, dstseries, te_laglist, swept_histbins(bidx), ...
+            cEn_getNoExtrapWrapperParams() );
+
+          telist_ext = cEn_calcExtrapTransferEntropy( ...
+            srcseries, dstseries, te_laglist, swept_histbins(bidx), ...
+            struct() );
+
+          te2chraw(:,sidx,bidx,didx) = telist_raw;
+          te2chext(:,sidx,bidx,didx) = telist_ext;
+        end
+
+        durstring = helper_makePrettyTime(toc);
+        disp([ ' -- Transfer entropy for "' datatitle '" with ' ...
+          prettysamps ' samples took ' durstring '.' ]);
+      end
+
+      % 3-channel partial transfer entropy.
+
+      for didx = 1:length(thisdatasetlist_3ch)
+        thisdata = thisdatasetlist_3ch{didx,1};
+        datatitle = thisdatasetlist_3ch{didx,3};
+
+        dstseries = thisdata(1,:);
+        src1series = thisdata(2,:);
+        src2series = thisdata(3,:);
+
+        tic;
+
+        for bidx = 1:binsweepsize
+          [ telist1_raw telist2_raw ] = cEn_calcExtrapPartialTE( ...
+            src1series, src2series, dstseries, ...
+            te_laglist, swept_histbins(bidx), ...
+            cEn_getNoExtrapWrapperParams() );
+
+          [ telist1_ext telist2_ext ] = cEn_calcExtrapPartialTE( ...
+            src1series, src2series, dstseries, ...
+            te_laglist, swept_histbins(bidx), ...
+            struct() );
+
+          te3ch1raw(:,sidx,bidx,didx) = telist1_raw;
+          te3ch1ext(:,sidx,bidx,didx) = telist1_ext;
+
+          te3ch2raw(:,sidx,bidx,didx) = telist2_raw;
+          te3ch2ext(:,sidx,bidx,didx) = telist2_ext;
+        end
+
+        durstring = helper_makePrettyTime(toc);
+        disp([ ' -- Partial transfer entropy for "' datatitle '" with ' ...
+          prettysamps ' samples took ' durstring '.' ]);
+      end
+    end
+
 
     % Finished with this sample count.
 
@@ -537,7 +609,41 @@ if want_sweep_sampcount
       'Mutual Information (extrap)', [ plotdir filesep 'mutual-ext' ] );
   end
 
-  % FIXME - Plotting NYI.
+  if want_test_transfer
+    helper_plotTESweptData( te2chraw, ...
+      te_laglist, swept_sampcounts, swept_histbins, ...
+      datalabels_te_2ch, datatitles_te_2ch, 'Transfer Entropy (bits)', ...
+      '2ch Transfer Entropy (raw)', [ plotdir filesep 'te2ch-raw' ] );
+
+    helper_plotTESweptData( te2chext, ...
+      te_laglist, swept_sampcounts, swept_histbins, ...
+      datalabels_te_2ch, datatitles_te_2ch, 'Transfer Entropy (bits)', ...
+      '2ch Transfer Entropy (extrap)', [ plotdir filesep 'te2ch-ext' ] );
+
+    helper_plotTESweptData( te3ch1raw, ...
+      te_laglist, swept_sampcounts, swept_histbins, ...
+      datalabels_te_3ch, datatitles_te_3ch, ...
+      'Partial Transfer Entropy (bits)', ...
+      '3ch Partial TE (src1, raw)', [ plotdir filesep 'te3ch1-raw' ] );
+
+    helper_plotTESweptData( te3ch1ext, ...
+      te_laglist, swept_sampcounts, swept_histbins, ...
+      datalabels_te_3ch, datatitles_te_3ch, ...
+      'Partial Transfer Entropy (bits)', ...
+      '3ch Partial TE (src1, extrap)', [ plotdir filesep 'te3ch1-ext' ] );
+
+    helper_plotTESweptData( te3ch2raw, ...
+      te_laglist, swept_sampcounts, swept_histbins, ...
+      datalabels_te_3ch, datatitles_te_3ch, ...
+      'Partial Transfer Entropy (bits)', ...
+      '3ch Partial TE (src2, raw)', [ plotdir filesep 'te3ch2-raw' ] );
+
+    helper_plotTESweptData( te3ch2ext, ...
+      te_laglist, swept_sampcounts, swept_histbins, ...
+      datalabels_te_3ch, datatitles_te_3ch, ...
+      'Partial Transfer Entropy (bits)', ...
+      '3ch Partial TE (src2, extrap)', [ plotdir filesep 'te3ch2-ext' ] );
+  end
 
   disp('== Finished generating sweep plots.');
 

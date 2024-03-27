@@ -5,21 +5,23 @@
 %
 % Switches.
 
-want_test_entropy = true;
-want_test_conditional = true;
-want_test_mutual = true;
-want_test_transfer = false;
+want_test_entropy = false;
+want_test_conditional = false;
+want_test_mutual = false;
+want_test_transfer = true;
 
 want_nonswept = true;
 
-want_sweep_sampcount = true;
-want_sweep_histbins = true;
+want_sweep_sampcount = false;
+want_sweep_histbins = false;
+
+want_parallel = true;
 
 
 %
 % Geometry.
 
-sampcount = 10000;
+sampcount = 30000;
 histbins = 32;
 
 te_laglist = [-10:10];

@@ -12,6 +12,16 @@ do_config;
 
 
 %
+% Startup.
+
+% Start the parallel pool now, so that it doesn't eat into benchmark time.
+if want_parallel
+  parpool;
+end
+
+
+
+%
 % Fixed-size tests.
 
 
@@ -230,12 +240,21 @@ if want_test_transfer && want_nonswept
     dstseries = thisdata(1,:);
     srcseries = thisdata(2,:);
 
-    telist_raw = cEn_calcExtrapTransferEntropy( ...
-      srcseries, dstseries, te_laglist, histbins, ...
-      cEn_getNoExtrapWrapperParams() );
+    if want_parallel
+      telist_raw = cEn_calcExtrapTransferEntropy_MT( ...
+        srcseries, dstseries, te_laglist, histbins, ...
+        cEn_getNoExtrapWrapperParams() );
 
-    telist_ext = cEn_calcExtrapTransferEntropy( ...
-      srcseries, dstseries, te_laglist, histbins, struct() );
+      telist_ext = cEn_calcExtrapTransferEntropy_MT( ...
+        srcseries, dstseries, te_laglist, histbins, struct() );
+    else
+      telist_raw = cEn_calcExtrapTransferEntropy( ...
+        srcseries, dstseries, te_laglist, histbins, ...
+        cEn_getNoExtrapWrapperParams() );
+
+      telist_ext = cEn_calcExtrapTransferEntropy( ...
+        srcseries, dstseries, te_laglist, histbins, struct() );
+    end
 
     durstring = helper_makePrettyTime(toc);
     disp([ '.. Computed "' datatitle '" TE in ' durstring '.' ]);
@@ -290,12 +309,21 @@ if want_test_transfer && want_nonswept
     src1series = thisdata(2,:);
     src2series = thisdata(3,:);
 
-    [ telist1_raw telist2_raw ] = cEn_calcExtrapPartialTE( ...
-      src1series, src2series, dstseries, te_laglist, histbins, ...
-      cEn_getNoExtrapWrapperParams() );
+    if want_parallel
+      [ telist1_raw telist2_raw ] = cEn_calcExtrapPartialTE_MT( ...
+        src1series, src2series, dstseries, te_laglist, histbins, ...
+        cEn_getNoExtrapWrapperParams() );
 
-    [ telist1_ext telist2_ext ] = cEn_calcExtrapPartialTE( ...
-      src1series, src2series, dstseries, te_laglist, histbins, struct() );
+      [ telist1_ext telist2_ext ] = cEn_calcExtrapPartialTE_MT( ...
+        src1series, src2series, dstseries, te_laglist, histbins, struct() );
+    else
+      [ telist1_raw telist2_raw ] = cEn_calcExtrapPartialTE( ...
+        src1series, src2series, dstseries, te_laglist, histbins, ...
+        cEn_getNoExtrapWrapperParams() );
+
+      [ telist1_ext telist2_ext ] = cEn_calcExtrapPartialTE( ...
+        src1series, src2series, dstseries, te_laglist, histbins, struct() );
+    end
 
     durstring = helper_makePrettyTime(toc);
     disp([ '.. Computed "' datatitle '" partial TE in ' durstring '.' ]);

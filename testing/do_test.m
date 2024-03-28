@@ -30,6 +30,13 @@ datasets_mutual = helper_makeDatasetsMutual(sampcount);
 [ datasets_te_2ch datasets_te_3ch ] = ...
   helper_makeDatasetsTransfer(sampcount, te_test_lag);
 
+if want_test_ft
+  ftsamps = round(sampcount / ft_trials);
+  datasets_mutual_ft = helper_makeDatasetsMutual_FT(ftsamps, ft_trials);
+  [ datasets_te_2ch_ft datasets_te_3ch_ft ] = ...
+    helper_makeDatasetsTransfer_FT(ftsamps, ft_trials, te_test_lag);
+end
+
 
 if want_test_entropy && want_nonswept
 
@@ -146,6 +153,13 @@ if want_test_conditional && want_nonswept
 
     thismsg = [ thismsg sprintf( '  %6.2f (extrap)', thisentropy ) ];
 
+    if want_test_ft
+      thisdata = datasets_mutual_ft{didx,1};
+      thisentropy = ...
+        cEn_calcFTConditionalShannon( thisdata, {}, histbins, struct() );
+      thismsg = [ thismsg sprintf( '  %6.2f (ft)', thisentropy ) ];
+    end
+
     thismsg = [ thismsg '   ' datatitle ];
 
     disp(thismsg);
@@ -188,6 +202,13 @@ if want_test_mutual && want_nonswept
     thismutual = cEn_calcExtrapMutualInfo( thisdata, histbins, struct() );
 
     thismsg = [ thismsg sprintf( '  %6.2f (extrap)', thismutual ) ];
+
+    if want_test_ft
+      thisdata = datasets_mutual_ft{didx,1};
+      thismutual = ...
+        cEn_calcFTMutualInfo( thisdata, {}, histbins, struct() );
+      thismsg = [ thismsg sprintf( '  %6.2f (ft)', thismutual ) ];
+    end
 
     thismsg = [ thismsg '   ' datatitle ];
 

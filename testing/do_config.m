@@ -8,20 +8,22 @@
 want_test_entropy = false;
 want_test_conditional = false;
 want_test_mutual = false;
-want_test_transfer = true;
+want_test_transfer = false;
 
 want_nonswept = true;
 
 want_sweep_sampcount = false;
 want_sweep_histbins = false;
 
-want_parallel = true;
+want_parallel = false;
+
+want_test_ft = true;
 
 
 %
 % Geometry.
 
-sampcount = 30000;
+sampcount = 10000;
 histbins = 32;
 
 te_laglist = [-10:10];
@@ -33,6 +35,8 @@ swept_sampcounts = [ 10000 ];
 swept_sampcounts = [ swept_sampcounts 30000 100000 ];
 %swept_sampcounts = [ swept_sampcounts 300000 1000000 ];
 %swept_sampcounts = [ swept_sampcounts 3000000 10000000 ];
+
+ft_trials = 10;
 
 
 %

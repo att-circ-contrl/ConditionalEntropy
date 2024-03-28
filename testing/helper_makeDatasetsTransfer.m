@@ -6,18 +6,20 @@ function [ datasets_2ch datasets_3ch ] = ...
 %
 % This builds data series used for testing calculation of transfer entropy.
 % and partial transfer entropy. Signal pairs that are correlated may be
-% time-lagged.
-% All sample values are in the range 0..1.
+% time-lagged. All sample values are in the range 0..1.
+%
+% Data matrices have Nchans x Nsamples elements. data(1,:) is the dependent
+% series, and data(k,:) are the independent series.
 %
 % "sampcount" is the desired number of samples per series.
 % "samp_shift" is the number of samples by which data series should be
 %   shifted forward or backward in time, for time-lagged signals.
 %
-% "datasets_2ch" is a Nx3 cell array. Element {k,1} is a 2xNsamp matrix
+% "datasets_2ch" is a Nx3 cell array. Element {k,1} is a 2 x Nsamples matrix
 %   containing data samples, element {k,2} is a short plot- and
 %   filename-safe label, and element {k,3} is a plot-safe verbose label for
 %   data series k.
-% "datasets_3ch" is a Nx3 cell array. Element {k,1} is a 3xNsamp matrix
+% "datasets_3ch" is a Nx3 cell array. Element {k,1} is a 3 x Nsamples matrix
 %   containing data samples, element {k,2} is a short plot- and
 %   filename-safe label, and element {k,3} is a plot-safe verbose label for
 %   data series k.

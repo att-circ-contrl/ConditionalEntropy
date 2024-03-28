@@ -6,11 +6,15 @@ function datasets = helper_makeDatasetsMutual( sampcount )
 % and conditional Shannon entropy.
 % All sample values are in the range 0..1.
 %
+% Data matrices have Nchans x Nsamples elements. data(1,:) is the dependent
+% series (for conditional entropy) and data(k,:) are the independent series.
+%
 % "sampcount" is the desired number of samples per series.
 %
-% "datasets" is a Nx3 cell array. Element {k,1} is a vector containing data
-%   samples, element {k,2} is a short plot- and filename-safe label, and
-%   element {k,3} is a plot-safe verbose label for data series k.
+% "datasets" is a Nx3 cell array. Element {k,1} is a Nchans x Nsamples
+%   matrix containing data samples, element {k,2} is a short plot- and
+%   filename-safe label, and element {k,3} is a plot-safe verbose label for
+%   data series k.
 
 
 % Make several uncorrelated noise series. One of them's our "signal".

@@ -1,17 +1,21 @@
-function bits = cEn_calcExtrapMutualInfo( dataseries, numbins, exparams )
+function bits = cEn_calcFTMutualInfo( ftdata, chanlist, numbins, exparams )
 
-% function bits = cEn_calcExtrapMutualInfo( dataseries, numbins, exparams )
+% function bits = cEn_calcFTMutualInfo( ftdata, chanlist, numbins, exparams )
 %
 % This calculates the mutual information associated with a set of signals.
 % This is the amount of information shared between the variables, as
 % measured by comparing the joint probability distribution with the
 % distribution expected if the variables were independent.
 %
+% This processes Field Trip data as input, concatenating trials.
+%
 % This needs a large number of samples to generate accurate results. To
 % compensate for smaller sample counts, this uses the extrapolation method
 % described in EXTRAPOLATION.txt.
 %
-% "dataseries" is a (Nchans,Nsamples) matrix containing several data series.
+% "ftdata" is a ft_datatype_raw data structure produced by Field Trip.
+% "chalist" is a cell array containing channel labels or a vector containing
+%   channel indices. If the list is empty, all channels are used.
 % "numbins" is either a vector of length Nchans or a scalar, indicating how
 %   many histogram bins to use for each channel's data.
 % "exparams" is a structure containing extrapolation tuning parameters, per
@@ -21,27 +25,11 @@ function bits = cEn_calcExtrapMutualInfo( dataseries, numbins, exparams )
 %   in information content vs the joint distribution of independent variables.
 
 
-% Use consistent bin definitions.
-edges = cEn_getMultivariateHistBins( dataseries, numbins );
+% Extract a data series matrix from the Field Trip data.
+dataseries = cEn_ftHelperConcatTrials( ftdata, chanlist );
 
-
-% Wrap the binning and mutual information calculation functions.
-datafunc = @(funcdata) helper_calcMutualInfo( funcdata, edges );
-
-bits = cEn_calcExtrapWrapper( dataseries, datafunc, exparams );
-
-
-% Done.
-end
-
-
-%
-% Helper Functions
-
-function thismutual = helper_calcMutualInfo( rawdata, edges )
-  [ thisbinned scratch ] = cEn_getBinnedMultivariate( rawdata, edges );
-  thismutual = cEn_calcMutualInfoHist( thisbinned );
-end
+% Wrap the non-FT function.
+bits = cEn_calcExtrapMutualInfo( dataseries, numbins, exparams );
 
 
 %

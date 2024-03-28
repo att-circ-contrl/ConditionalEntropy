@@ -13,7 +13,7 @@ function bits = cEn_calcFTMutualInfo( ftdata, chanlist, numbins, exparams )
 % described in EXTRAPOLATION.txt.
 %
 % "ftdata" is a ft_datatype_raw data structure produced by Field Trip.
-% "chalist" is a cell array containing channel labels or a vector containing
+% "chanlist" is a cell array containing channel labels or a vector containing
 %   channel indices. If the list is empty, all channels are used. The first
 %   channel in this list is used as the variable Y; remaining channels are
 %   X_k.

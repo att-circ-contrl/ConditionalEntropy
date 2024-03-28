@@ -8,7 +8,7 @@
 want_test_entropy = false;
 want_test_conditional = false;
 want_test_mutual = false;
-want_test_transfer = false;
+want_test_transfer = true;
 
 want_nonswept = true;
 
@@ -36,7 +36,8 @@ swept_sampcounts = [ swept_sampcounts 30000 100000 ];
 %swept_sampcounts = [ swept_sampcounts 300000 1000000 ];
 %swept_sampcounts = [ swept_sampcounts 3000000 10000000 ];
 
-ft_trials = 10;
+ft_trials = 1;
+%ft_trials = 10;
 
 
 %

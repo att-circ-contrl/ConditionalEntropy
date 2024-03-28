@@ -251,30 +251,55 @@ if want_test_transfer && want_nonswept
   tetable_ext = nan(size(tetable_raw));
 
   for didx = 1:datacount
-    thisdata = datasets_te_2ch{didx,1};
     datalabel = datasets_te_2ch{didx,2};
     datatitle = datasets_te_2ch{didx,3};
 
     thismsg = '';
     tic;
 
-    dstseries = thisdata(1,:);
-    srcseries = thisdata(2,:);
+    dstidx = 1;
+    srcidx = 2;
 
-    if want_parallel
-      telist_raw = cEn_calcExtrapTransferEntropy_MT( ...
-        srcseries, dstseries, te_laglist, histbins, ...
-        cEn_getNoExtrapWrapperParams() );
+    if want_test_ft
+      thisdata = datasets_te_2ch_ft{didx,1};
 
-      telist_ext = cEn_calcExtrapTransferEntropy_MT( ...
-        srcseries, dstseries, te_laglist, histbins, struct() );
+      if want_parallel
+% FIXME - NYI
+        telist_raw = cEn_calcFTTransferEntropy_MT( ...
+          thisdata, srcidx, dstidx, te_laglist, histbins, ...
+          cEn_getNoExtrapWrapperParams() );
+
+% FIXME - NYI
+        telist_ext = cEn_calcFTTransferEntropy_MT( ...
+          thisdata, srcidx, dstidx, te_laglist, histbins, struct() );
+      else
+        telist_raw = cEn_calcFTTransferEntropy( ...
+          thisdata, srcidx, dstidx, te_laglist, histbins, ...
+          cEn_getNoExtrapWrapperParams() );
+
+        telist_ext = cEn_calcFTTransferEntropy( ...
+          thisdata, srcidx, dstidx, te_laglist, histbins, struct() );
+      end
     else
-      telist_raw = cEn_calcExtrapTransferEntropy( ...
-        srcseries, dstseries, te_laglist, histbins, ...
-        cEn_getNoExtrapWrapperParams() );
+      thisdata = datasets_te_2ch{didx,1};
+      dstseries = thisdata(dstidx,:);
+      srcseries = thisdata(srcidx,:);
 
-      telist_ext = cEn_calcExtrapTransferEntropy( ...
-        srcseries, dstseries, te_laglist, histbins, struct() );
+      if want_parallel
+        telist_raw = cEn_calcExtrapTransferEntropy_MT( ...
+          srcseries, dstseries, te_laglist, histbins, ...
+          cEn_getNoExtrapWrapperParams() );
+
+        telist_ext = cEn_calcExtrapTransferEntropy_MT( ...
+          srcseries, dstseries, te_laglist, histbins, struct() );
+      else
+        telist_raw = cEn_calcExtrapTransferEntropy( ...
+          srcseries, dstseries, te_laglist, histbins, ...
+          cEn_getNoExtrapWrapperParams() );
+
+        telist_ext = cEn_calcExtrapTransferEntropy( ...
+          srcseries, dstseries, te_laglist, histbins, struct() );
+      end
     end
 
     durstring = helper_makePrettyTime(toc);

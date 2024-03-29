@@ -30,12 +30,11 @@ datasets_mutual = helper_makeDatasetsMutual(sampcount);
 [ datasets_te_2ch datasets_te_3ch ] = ...
   helper_makeDatasetsTransfer(sampcount, te_test_lag);
 
-if want_test_ft
-  ftsamps = round(sampcount / ft_trials);
-  datasets_mutual_ft = helper_makeDatasetsMutual_FT(ftsamps, ft_trials);
-  [ datasets_te_2ch_ft datasets_te_3ch_ft ] = ...
-    helper_makeDatasetsTransfer_FT(ftsamps, ft_trials, te_test_lag);
-end
+% Build Field Trip sets whether we test them or not.
+ftsamps = round(sampcount / ft_trials);
+datasets_mutual_ft = helper_makeDatasetsMutual_FT(ftsamps, ft_trials);
+[ datasets_te_2ch_ft datasets_te_3ch_ft ] = ...
+  helper_makeDatasetsTransfer_FT(ftsamps, ft_trials, te_test_lag);
 
 
 if want_test_entropy && want_nonswept
@@ -264,12 +263,10 @@ if want_test_transfer && want_nonswept
       thisdata = datasets_te_2ch_ft{didx,1};
 
       if want_parallel
-% FIXME - NYI
         telist_raw = cEn_calcFTTransferEntropy_MT( ...
           thisdata, srcidx, dstidx, te_laglist, histbins, ...
           cEn_getNoExtrapWrapperParams() );
 
-% FIXME - NYI
         telist_ext = cEn_calcFTTransferEntropy_MT( ...
           thisdata, srcidx, dstidx, te_laglist, histbins, struct() );
       else
@@ -344,31 +341,56 @@ if want_test_transfer && want_nonswept
   tetable2_ext = nan(size(tetable_raw));
 
   for didx = 1:datacount
-    thisdata = datasets_te_3ch{didx,1};
     datalabel = datasets_te_3ch{didx,2};
     datatitle = datasets_te_3ch{didx,3};
 
     thismsg = '';
     tic;
 
-    dstseries = thisdata(1,:);
-    src1series = thisdata(2,:);
-    src2series = thisdata(3,:);
+    dstidx = 1;
+    src1idx = 2;
+    src2idx = 3;
 
-    if want_parallel
-      [ telist1_raw telist2_raw ] = cEn_calcExtrapPartialTE_MT( ...
-        src1series, src2series, dstseries, te_laglist, histbins, ...
-        cEn_getNoExtrapWrapperParams() );
+    if want_test_ft
+      thisdata = datasets_te_3ch_ft{didx,1};
 
-      [ telist1_ext telist2_ext ] = cEn_calcExtrapPartialTE_MT( ...
-        src1series, src2series, dstseries, te_laglist, histbins, struct() );
+      if want_parallel
+        [ telist1_raw telist2_raw ] = cEn_calcFTPartialTE_MT( ...
+          thisdata, src1idx, src2idx, dstidx, te_laglist, histbins, ...
+          cEn_getNoExtrapWrapperParams() );
+
+        [ telist1_ext telist2_ext ] = cEn_calcFTPartialTE_MT( ...
+          thisdata, src1idx, src2idx, dstidx, te_laglist, histbins, struct() );
+      else
+        [ telist1_raw telist2_raw ] = cEn_calcFTPartialTE( ...
+          thisdata, src1idx, src2idx, dstidx, te_laglist, histbins, ...
+          cEn_getNoExtrapWrapperParams() );
+
+        [ telist1_ext telist2_ext ] = cEn_calcFTPartialTE( ...
+          thisdata, src1idx, src2idx, dstidx, te_laglist, histbins, struct() );
+      end
     else
-      [ telist1_raw telist2_raw ] = cEn_calcExtrapPartialTE( ...
-        src1series, src2series, dstseries, te_laglist, histbins, ...
-        cEn_getNoExtrapWrapperParams() );
+      thisdata = datasets_te_3ch{didx,1};
 
-      [ telist1_ext telist2_ext ] = cEn_calcExtrapPartialTE( ...
-        src1series, src2series, dstseries, te_laglist, histbins, struct() );
+      dstseries = thisdata(dstidx,:);
+      src1series = thisdata(src1idx,:);
+      src2series = thisdata(src2idx,:);
+
+      if want_parallel
+        [ telist1_raw telist2_raw ] = cEn_calcExtrapPartialTE_MT( ...
+          src1series, src2series, dstseries, te_laglist, histbins, ...
+          cEn_getNoExtrapWrapperParams() );
+
+        [ telist1_ext telist2_ext ] = cEn_calcExtrapPartialTE_MT( ...
+          src1series, src2series, dstseries, te_laglist, histbins, struct() );
+      else
+        [ telist1_raw telist2_raw ] = cEn_calcExtrapPartialTE( ...
+          src1series, src2series, dstseries, te_laglist, histbins, ...
+          cEn_getNoExtrapWrapperParams() );
+
+        [ telist1_ext telist2_ext ] = cEn_calcExtrapPartialTE( ...
+          src1series, src2series, dstseries, te_laglist, histbins, struct() );
+      end
     end
 
     durstring = helper_makePrettyTime(toc);
@@ -489,6 +511,8 @@ if want_sweep_sampcount
     thissampcount = swept_sampcounts(sidx);
     prettysamps = helper_makePrettyCount( thissampcount );
 
+    thisftsamps = round(thissampcount / ft_trials);
+
 
     % Entropy.
 
@@ -519,19 +543,38 @@ if want_sweep_sampcount
 
     if want_test_conditional
       thisdatasetlist = helper_makeDatasetsMutual( thissampcount );
+      thisdatasetlist_ft = ...
+        helper_makeDatasetsMutual_FT( thisftsamps, ft_trials );
 
       tic;
 
       for didx = 1:length(thisdatasetlist)
-        thisdata = thisdatasetlist{didx,1};
-        for bidx = 1:binsweepsize
-          [ thisbinned scratch ] = ...
-            cEn_getBinnedMultivariate( thisdata, swept_histbins(bidx) );
-          conditionalraw( sidx, bidx, didx ) = ...
-            cEn_calcConditionalShannonHist( thisbinned );
-          conditionalext( sidx, bidx, didx ) = ...
-            cEn_calcExtrapConditionalShannon( ...
-              thisdata, swept_histbins(bidx), struct() );
+        if want_test_ft
+          thisdata = thisdatasetlist_ft{didx,1};
+
+          for bidx = 1:binsweepsize
+            conditionalraw( sidx, bidx, didx ) = ...
+              cEn_calcFTConditionalShannon( ...
+                thisdata, {}, swept_histbins(bidx), ...
+                cEn_getNoExtrapWrapperParams() );
+
+            conditionalext( sidx, bidx, didx ) = ...
+              cEn_calcFTConditionalShannon( ...
+                thisdata, {}, swept_histbins(bidx), struct() );
+          end
+        else
+          thisdata = thisdatasetlist{didx,1};
+
+          for bidx = 1:binsweepsize
+            [ thisbinned scratch ] = ...
+              cEn_getBinnedMultivariate( thisdata, swept_histbins(bidx) );
+            conditionalraw( sidx, bidx, didx ) = ...
+              cEn_calcConditionalShannonHist( thisbinned );
+
+            conditionalext( sidx, bidx, didx ) = ...
+              cEn_calcExtrapConditionalShannon( ...
+                thisdata, swept_histbins(bidx), struct() );
+          end
         end
       end
 
@@ -545,18 +588,35 @@ if want_sweep_sampcount
 
     if want_test_mutual
       thisdatasetlist = helper_makeDatasetsMutual( thissampcount );
+      thisdatasetlist_ft = ...
+        helper_makeDatasetsMutual_FT( thisftsamps, ft_trials );
 
       tic;
 
       for didx = 1:length(thisdatasetlist)
-        thisdata = thisdatasetlist{didx,1};
-        for bidx = 1:binsweepsize
-          [ thisbinned scratch ] = ...
-            cEn_getBinnedMultivariate( thisdata, swept_histbins(bidx) );
-          mutualraw( sidx, bidx, didx ) = ...
-            cEn_calcMutualInfoHist( thisbinned );
-          mutualext( sidx, bidx, didx ) = cEn_calcExtrapMutualInfo( ...
-            thisdata, swept_histbins(bidx), struct() );
+        if want_test_ft
+          thisdata = thisdatasetlist_ft{didx,1};
+
+          for bidx = 1:binsweepsize
+            mutualraw( sidx, bidx, didx ) = cEn_calcFTMutualInfo( ...
+              thisdata, {}, swept_histbins(bidx), ...
+              cEn_getNoExtrapWrapperParams() );
+
+            mutualext( sidx, bidx, didx ) = cEn_calcFTMutualInfo( ...
+              thisdata, {}, swept_histbins(bidx), struct() );
+          end
+        else
+          thisdata = thisdatasetlist{didx,1};
+
+          for bidx = 1:binsweepsize
+            [ thisbinned scratch ] = ...
+              cEn_getBinnedMultivariate( thisdata, swept_histbins(bidx) );
+            mutualraw( sidx, bidx, didx ) = ...
+              cEn_calcMutualInfoHist( thisbinned );
+
+            mutualext( sidx, bidx, didx ) = cEn_calcExtrapMutualInfo( ...
+              thisdata, swept_histbins(bidx), struct() );
+          end
         end
       end
 
@@ -571,29 +631,70 @@ if want_sweep_sampcount
     if want_test_transfer
       [ thisdatasetlist_2ch thisdatasetlist_3ch ] = ...
         helper_makeDatasetsTransfer( thissampcount, te_test_lag );
+      [ thisdatasetlist_2ch_ft thisdatasetlist_3ch_ft ] = ...
+        helper_makeDatasetsTransfer_FT( thisftsamps, ft_trials, te_test_lag );
 
       % 2-channel transfer entropy.
 
+      dstidx = 1;
+      srcidx = 2;
+
       for didx = 1:length(thisdatasetlist_2ch)
-        thisdata = thisdatasetlist_2ch{didx,1};
         datatitle = thisdatasetlist_2ch{didx,3};
-
-        dstseries = thisdata(1,:);
-        srcseries = thisdata(2,:);
-
         tic;
 
-        for bidx = 1:binsweepsize
-          telist_raw = cEn_calcExtrapTransferEntropy( ...
-            srcseries, dstseries, te_laglist, swept_histbins(bidx), ...
-            cEn_getNoExtrapWrapperParams() );
+        if want_test_ft
+          thisdata = thisdatasetlist_2ch_ft{didx,1};
 
-          telist_ext = cEn_calcExtrapTransferEntropy( ...
-            srcseries, dstseries, te_laglist, swept_histbins(bidx), ...
-            struct() );
+          for bidx = 1:binsweepsize
+            if want_parallel
+              telist_raw = cEn_calcFTTransferEntropy_MT( ...
+                thisdata, srcidx, dstidx, te_laglist, swept_histbins(bidx), ...
+                cEn_getNoExtrapWrapperParams() );
 
-          te2chraw(:,sidx,bidx,didx) = telist_raw;
-          te2chext(:,sidx,bidx,didx) = telist_ext;
+              telist_ext = cEn_calcFTTransferEntropy_MT( ...
+                thisdata, srcidx, dstidx, te_laglist, swept_histbins(bidx), ...
+                struct() );
+            else
+              telist_raw = cEn_calcFTTransferEntropy( ...
+                thisdata, srcidx, dstidx, te_laglist, swept_histbins(bidx), ...
+                cEn_getNoExtrapWrapperParams() );
+
+              telist_ext = cEn_calcFTTransferEntropy( ...
+                thisdata, srcidx, dstidx, te_laglist, swept_histbins(bidx), ...
+                struct() );
+            end
+
+            te2chraw(:,sidx,bidx,didx) = telist_raw;
+            te2chext(:,sidx,bidx,didx) = telist_ext;
+          end
+        else
+          thisdata = thisdatasetlist_2ch{didx,1};
+          dstseries = thisdata(dstidx,:);
+          srcseries = thisdata(srcidx,:);
+
+          for bidx = 1:binsweepsize
+            if want_parallel
+              telist_raw = cEn_calcExtrapTransferEntropy_MT( ...
+                srcseries, dstseries, te_laglist, swept_histbins(bidx), ...
+                cEn_getNoExtrapWrapperParams() );
+
+              telist_ext = cEn_calcExtrapTransferEntropy_MT( ...
+                srcseries, dstseries, te_laglist, swept_histbins(bidx), ...
+                struct() );
+            else
+              telist_raw = cEn_calcExtrapTransferEntropy( ...
+                srcseries, dstseries, te_laglist, swept_histbins(bidx), ...
+                cEn_getNoExtrapWrapperParams() );
+
+              telist_ext = cEn_calcExtrapTransferEntropy( ...
+                srcseries, dstseries, te_laglist, swept_histbins(bidx), ...
+                struct() );
+            end
+
+            te2chraw(:,sidx,bidx,didx) = telist_raw;
+            te2chext(:,sidx,bidx,didx) = telist_ext;
+          end
         end
 
         durstring = helper_makePrettyTime(toc);
@@ -603,32 +704,81 @@ if want_sweep_sampcount
 
       % 3-channel partial transfer entropy.
 
+      dstidx = 1;
+      src1idx = 2;
+      src2idx = 3;
+
       for didx = 1:length(thisdatasetlist_3ch)
-        thisdata = thisdatasetlist_3ch{didx,1};
         datatitle = thisdatasetlist_3ch{didx,3};
-
-        dstseries = thisdata(1,:);
-        src1series = thisdata(2,:);
-        src2series = thisdata(3,:);
-
         tic;
 
-        for bidx = 1:binsweepsize
-          [ telist1_raw telist2_raw ] = cEn_calcExtrapPartialTE( ...
-            src1series, src2series, dstseries, ...
-            te_laglist, swept_histbins(bidx), ...
-            cEn_getNoExtrapWrapperParams() );
+        if want_test_ft
+          thisdata = thisdatasetlist_3ch_ft{didx,1};
 
-          [ telist1_ext telist2_ext ] = cEn_calcExtrapPartialTE( ...
-            src1series, src2series, dstseries, ...
-            te_laglist, swept_histbins(bidx), ...
-            struct() );
+          for bidx = 1:binsweepsize
+            if want_parallel
+              [ telist1_raw telist2_raw ] = cEn_calcFTPartialTE_MT( ...
+                thisdata, src1idx, src2idx, dstidx, ...
+                te_laglist, swept_histbins(bidx), ...
+                cEn_getNoExtrapWrapperParams() );
 
-          te3ch1raw(:,sidx,bidx,didx) = telist1_raw;
-          te3ch1ext(:,sidx,bidx,didx) = telist1_ext;
+              [ telist1_ext telist2_ext ] = cEn_calcFTPartialTE_MT( ...
+                thisdata, src1idx, src2idx, dstidx, ...
+                te_laglist, swept_histbins(bidx), ...
+                struct() );
+            else
+              [ telist1_raw telist2_raw ] = cEn_calcFTPartialTE( ...
+                thisdata, src1idx, src2idx, dstidx, ...
+                te_laglist, swept_histbins(bidx), ...
+                cEn_getNoExtrapWrapperParams() );
 
-          te3ch2raw(:,sidx,bidx,didx) = telist2_raw;
-          te3ch2ext(:,sidx,bidx,didx) = telist2_ext;
+              [ telist1_ext telist2_ext ] = cEn_calcFTPartialTE( ...
+                thisdata, src1idx, src2idx, dstidx, ...
+                te_laglist, swept_histbins(bidx), ...
+                struct() );
+            end
+
+            te3ch1raw(:,sidx,bidx,didx) = telist1_raw;
+            te3ch1ext(:,sidx,bidx,didx) = telist1_ext;
+
+            te3ch2raw(:,sidx,bidx,didx) = telist2_raw;
+            te3ch2ext(:,sidx,bidx,didx) = telist2_ext;
+          end
+        else
+          thisdata = thisdatasetlist_3ch{didx,1};
+          dstseries = thisdata(dstidx,:);
+          src1series = thisdata(src1idx,:);
+          src2series = thisdata(src2idx,:);
+
+          for bidx = 1:binsweepsize
+            if want_parallel
+              [ telist1_raw telist2_raw ] = cEn_calcExtrapPartialTE_MT( ...
+                src1series, src2series, dstseries, ...
+                te_laglist, swept_histbins(bidx), ...
+                cEn_getNoExtrapWrapperParams() );
+
+              [ telist1_ext telist2_ext ] = cEn_calcExtrapPartialTE_MT( ...
+                src1series, src2series, dstseries, ...
+                te_laglist, swept_histbins(bidx), ...
+                struct() );
+            else
+              [ telist1_raw telist2_raw ] = cEn_calcExtrapPartialTE( ...
+                src1series, src2series, dstseries, ...
+                te_laglist, swept_histbins(bidx), ...
+                cEn_getNoExtrapWrapperParams() );
+
+              [ telist1_ext telist2_ext ] = cEn_calcExtrapPartialTE( ...
+                src1series, src2series, dstseries, ...
+                te_laglist, swept_histbins(bidx), ...
+                struct() );
+            end
+
+            te3ch1raw(:,sidx,bidx,didx) = telist1_raw;
+            te3ch1ext(:,sidx,bidx,didx) = telist1_ext;
+
+            te3ch2raw(:,sidx,bidx,didx) = telist2_raw;
+            te3ch2ext(:,sidx,bidx,didx) = telist2_ext;
+          end
         end
 
         durstring = helper_makePrettyTime(toc);

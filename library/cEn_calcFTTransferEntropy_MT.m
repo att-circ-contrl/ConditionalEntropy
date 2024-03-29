@@ -1,13 +1,17 @@
-function telist = cEn_calcFTTransferEntropy( ...
+function telist = cEn_calcFTTransferEntropy_MT( ...
   ftdata, srcchan, dstchan, laglist, numbins, exparams )
 
-% function telist = cEn_calcFTTransferEntropy( ...
+% function telist = cEn_calcFTTransferEntropy_MT( ...
 %   ftdata, srcchan, dstchan, laglist, numbins, exparams )
 %
 % This calculates the transfer entropy from Src to Dst, for a specified set
 % of time lags.
 %
 % This processes Field Trip input, concatenating trials (after shifting).
+%
+% This calls cEn_calcExtrapTransferEntropy_MT(), which tests different lags
+% in parallel with each other. This requires the Parallel Computing
+% Toolbox.
 %
 % NOTE - This needs a large number of samples to generate accurate results!
 % To compensate for smaller sample counts, this uses the extrapolation
@@ -47,9 +51,9 @@ srcseries = cEn_ftHelperChannelToMatrix(ftdata, srcchan);
 dstseries = cEn_ftHelperChannelToMatrix(ftdata, dstchan);
 
 
-% Wrap the TE function.
+% Wrap the parallel TE function.
 
-telist = cEn_calcExtrapTransferEntropy( ...
+telist = cEn_calcExtrapTransferEntropy_MT( ...
   srcseries, dstseries, laglist, numbins, exparams );
 
 

@@ -10,12 +10,12 @@ want_test_conditional = false;
 want_test_mutual = false;
 want_test_transfer = true;
 
-want_nonswept = true;
+want_nonswept = false;
 
-want_sweep_sampcount = false;
-want_sweep_histbins = false;
+want_sweep_sampcount = true;
+want_sweep_histbins = true;
 
-want_parallel = false;
+want_parallel = true;
 
 want_test_ft = true;
 
@@ -32,7 +32,7 @@ te_test_lag = 5;
 swept_histbins = [ 8 16 32 ];
 
 swept_sampcounts = [ 10000 ];
-swept_sampcounts = [ swept_sampcounts 30000 100000 ];
+%swept_sampcounts = [ swept_sampcounts 30000 100000 ];
 %swept_sampcounts = [ swept_sampcounts 300000 1000000 ];
 %swept_sampcounts = [ swept_sampcounts 3000000 10000000 ];
 

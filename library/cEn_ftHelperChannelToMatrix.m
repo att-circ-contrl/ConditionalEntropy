@@ -15,16 +15,10 @@ function dataseries = cEn_ftHelperChannelToMatrix( ftdata, chanwanted )
 
 
 % Bulletproof the desired channel.
+% NOTE - Falling back to the first channel for invalid requests!
 
-if ischar(chanwanted) && (~isempty(chanwanted))
-  chanwanted = min(find( strcmp( chanwanted, ftdata.label ) ));
-end
-
-if isempty(chanwanted)
-  chanwanted = 1;
-end
-
-if (chanwanted < 1) || (chanwanted > length(ftdata.label))
+chanwanted = cEn_ftHelperCheckChannels( ftdata.label, chanwanted );
+if isnan(chanwanted)
   chanwanted = 1;
 end
 

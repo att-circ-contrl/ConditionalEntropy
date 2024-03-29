@@ -15,26 +15,11 @@ function dataseries = cEn_ftHelperConcatTrials( ftdata, chanlist )
 %   data. Channels are copied in the order specified by "chanlist".
 
 
-% Get a channel list, and turn it into indices.
+% Turn the channel list into indices.
+% NOTE - Falling back to the first channel for invalid entries!
 
-if isempty(chanlist)
-  chanlist = ftdata.label;
-end
-
-if iscell(chanlist)
-  newlist = [];
-  for cidx = 1:length(chanlist)
-    thisidx = min(find( strcmp( chanlist{cidx}, ftdata.label ) ));
-    if isempty(thisidx)
-      thisidx = 1;
-    end
-    newlist(cidx) = thisidx;
-  end
-  chanlist = newlist;
-end
-
-validmask = (chanlist > 0) & (chanlist <= length(ftdata.label));
-chanlist(~validmask) = 1;
+chanlist = cEn_ftHelperCheckChannels( ftdata.label, chanlist );
+chanlist(isnan(chanlist)) = 1;
 
 
 % Get geometry metadata.

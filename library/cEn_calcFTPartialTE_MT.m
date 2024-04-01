@@ -45,7 +45,7 @@ function [ telist1 telist2 ] = cEn_calcFTPartialTE_MT( ...
 %   containing a channel index. This specifies source signal B.
 % "dstchan" is a character vector containing a channel label, or a scalar
 %   containing a channel index. This specifies destination signal Y.
-% "laglist" is a vector containing sample lays to test. These correspond to
+% "laglist" is a vector containing sample lags to test. These correspond to
 %   tau in the equation above. These may be negative (looking at the future).
 % "numbins" is the number of bins to use for each signal's data when
 %   constructing histograms.

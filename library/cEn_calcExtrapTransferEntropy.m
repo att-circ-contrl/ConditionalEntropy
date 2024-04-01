@@ -21,10 +21,11 @@ function telist = cEn_calcExtrapTransferEntropy( ...
 % entire past history:
 %   TEx->y(tau) = H[Y(t)|Y(t-tau)] - H[Y(t)|Y(t-tau),X(t-tau)]
 %
-% "srcseries" is a vector of length Nsamples containing the source signal X.
-% "dstseries" is a vector of length Nsamples containing the destination
-%   signal Y.
-% "laglist" is a vector containing sample lays to test. These correspond to
+% "srcseries" is a vector of length Nsamples or a Ntrials x Nsamples matrix
+%   containing the source signal X.
+% "dstseries" is a vector of length Nsamples or a Ntrials x Nsamples matrix
+%   containing the destination signal Y.
+% "laglist" is a vector containing sample lags to test. These correspond to
 %   tau in the equation above. These may be negative (looking at the future).
 % "numbins" is the number of bins to use for each signal's data when
 %   constructing histograms.
@@ -36,42 +37,19 @@ function telist = cEn_calcExtrapTransferEntropy( ...
 
 
 %
-% Get the cropping range.
-
-% NOTE - These really should be the same length, but bulletproof just in case.
-nsamples = min( length(srcseries), length(dstseries) );
-
-% Zero or negative.
-minlag = min(laglist);
-minlag = min(minlag, 0);
-
-% Zero or positive.
-maxlag = max(laglist);
-maxlag = max(maxlag, 0);
-
-firstsamp = 1 + maxlag;
-lastsamp = nsamples + minlag;
-
-% FIXME - Not checking for lag larger than input size!
-
-
-%
 % Walk through the lag list, building TE estimates.
 
 telist = nan(size(laglist));
 
 for lidx = 1:length(laglist)
+
   thislag = laglist(lidx);
 
-  % Instead of shifting the "past" versions left, shift "present" right.
-  dstpresent = circshift(dstseries, thislag);
-  dstpast = dstseries;
-  srcpast = srcseries;
-
-  % Crop to avoid wrapped portions.
-  dstpresent = dstpresent(firstsamp:lastsamp);
-  dstpast = dstpast(firstsamp:lastsamp);
-  srcpast = srcpast(firstsamp:lastsamp);
+  % Shift, crop, and concatenate the data trials.
+  % Supply the source sequence twice, since the helper expects two sources.
+  [ dstpresent dstpast srcpast scratch ] = ...
+    cEn_teHelperShiftAndLinearize( dstseries, srcseries, srcseries, ...
+      thislag, laglist );
 
 
   % Assemble the conditional entropy data series.
@@ -106,6 +84,7 @@ for lidx = 1:length(laglist)
   end
 
   telist(lidx) = thiste;
+
 end
 
 

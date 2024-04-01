@@ -28,7 +28,7 @@ function telist = cEn_calcExtrapTransferEntropy_MT( ...
 % "srcseries" is a vector of length Nsamples containing the source signal X.
 % "dstseries" is a vector of length Nsamples containing the destination
 %   signal Y.
-% "laglist" is a vector containing sample lays to test. These correspond to
+% "laglist" is a vector containing sample lags to test. These correspond to
 %   tau in the equation above. These may be negative (looking at the future).
 % "numbins" is the number of bins to use for each signal's data when
 %   constructing histograms.

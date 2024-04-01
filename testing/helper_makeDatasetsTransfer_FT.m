@@ -1,8 +1,10 @@
 function [ datasets_2ch datasets_3ch ] = ...
-  helper_makeDatasetsTransfer_FT( sampcount, trialcount, samp_shift )
+  helper_makeDatasetsTransfer_FT( ...
+    sampcount, trialcount, samp_shift, signaltype )
 
 % function [ datasets_2ch datasets_3ch ] = ...
-%   helper_makeDatasetsTransfer_FT( sampcount, trialcount, samp_shift )
+%   helper_makeDatasetsTransfer_FT( ...
+%     sampcount, trialcount, samp_shift, signaltype )
 %
 % This builds data series used for testing calculation of transfer entropy.
 % and partial transfer entropy. Signal pairs that are correlated may be
@@ -17,6 +19,7 @@ function [ datasets_2ch datasets_3ch ] = ...
 % "trialcount" is the desired number of trials.
 % "samp_shift" is the number of samples by which data series should be
 %   shifted forward or backward in time, for time-lagged signals.
+% "signaltype" is 'noise' or 'sine'.
 %
 % "datasets_2ch" is a Nx3 cell array. Element {k,1} is a ft_datatype_raw
 %   structure containing two data channels, element {k,2} is a short plot-
@@ -31,10 +34,10 @@ function [ datasets_2ch datasets_3ch ] = ...
 % Wrap the data generator function.
 % Make two wrappers, selecting the 2ch and 3ch outputs.
 
-datafunc_2ch = ...
-  @( nsamps ) helperFT_makeOneTransferSet( nsamps, samp_shift, '2ch' );
-datafunc_3ch = ...
-  @( nsamps ) helperFT_makeOneTransferSet( nsamps, samp_shift, '3ch' );
+datafunc_2ch = @( nsamps ) helperFT_makeOneTransferSet( ...
+  nsamps, samp_shift, signaltype, '2ch' );
+datafunc_3ch = @( nsamps ) helperFT_makeOneTransferSet( ...
+  nsamps, samp_shift, signaltype, '3ch' );
 
 datasets_2ch = ...
   helper_makeDatasetsFTWrapper( sampcount, trialcount, datafunc_2ch );
@@ -50,10 +53,10 @@ end
 % Helper Functions
 
 function datasets = ...
-  helperFT_makeOneTransferSet( sampcount, samp_shift, whicharg )
+  helperFT_makeOneTransferSet( sampcount, samp_shift, signaltype, whicharg )
 
   [ thisdata_2ch thisdata_3ch ] = ...
-    helper_makeDatasetsTransfer( sampcount, samp_shift );
+    helper_makeDatasetsTransfer( sampcount, samp_shift, signaltype );
 
   if strcmp('3ch', whicharg)
     datasets = thisdata_3ch;

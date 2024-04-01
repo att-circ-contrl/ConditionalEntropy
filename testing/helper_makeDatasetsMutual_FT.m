@@ -1,6 +1,8 @@
-function datasets = helper_makeDatasetsMutual_FT( sampcount, trialcount )
+function datasets = helper_makeDatasetsMutual_FT( ...
+  sampcount, trialcount, signaltype )
 
-% function datasets = helper_makeDatasetsMutual_FT( sampcount, trialcount )
+% function datasets = helper_makeDatasetsMutual_FT( ...
+%   sampcount, trialcount, signaltype )
 %
 % This builds data series used for testing calculation of mutual information
 % and conditional Shannon entropy. All sample values are in the range 0..1.
@@ -12,6 +14,7 @@ function datasets = helper_makeDatasetsMutual_FT( sampcount, trialcount )
 %
 % "sampcount" is the desired number of samples per trial.
 % "trialcount" is the desired number of trials.
+% "signaltype" is 'noise' or 'sine'.
 %
 % "datasets" is a Nx3 cell array. Element {k,1} is a ft_datatype_raw
 %   structure containing data samples, element {k,2} is a short plot- and
@@ -21,7 +24,7 @@ function datasets = helper_makeDatasetsMutual_FT( sampcount, trialcount )
 
 % Wrap the data generator function.
 
-datafunc = @( nsamps ) helper_makeDatasetsMutual( nsamps );
+datafunc = @( nsamps ) helper_makeDatasetsMutual( nsamps, signaltype );
 
 datasets = helper_makeDatasetsFTWrapper( sampcount, trialcount, datafunc );
 

@@ -1,6 +1,6 @@
-function datasets = helper_makeDatasetsMutual( sampcount )
+function datasets = helper_makeDatasetsMutual( sampcount, signaltype )
 
-% function datasets = helper_makeDatasetsMutual( sampcount )
+% function datasets = helper_makeDatasetsMutual( sampcount, signaltype )
 %
 % This builds data series used for testing calculation of mutual information
 % and conditional Shannon entropy.
@@ -10,6 +10,7 @@ function datasets = helper_makeDatasetsMutual( sampcount )
 % series (for conditional entropy) and data(k,:) are the independent series.
 %
 % "sampcount" is the desired number of samples per series.
+% "signaltype" is 'noise' or 'sine'.
 %
 % "datasets" is a Nx3 cell array. Element {k,1} is a Nchans x Nsamples
 %   matrix containing data samples, element {k,2} is a short plot- and
@@ -19,10 +20,10 @@ function datasets = helper_makeDatasetsMutual( sampcount )
 
 % Make several uncorrelated noise series. One of them's our "signal".
 
-data_signal = rand([ 1 sampcount ]);
+data_signal = helper_makeDataSignal(sampcount, signaltype);
 
-data_noise1 = rand([ 1 sampcount ]);
-data_noise2 = rand([ 1 sampcount ]);
+data_noise1 = helper_makeDataSignal(sampcount, signaltype);
+data_noise2 = helper_makeDataSignal(sampcount, signaltype);
 
 
 % Get signal-plus-noise series.

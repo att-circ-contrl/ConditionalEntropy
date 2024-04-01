@@ -1,8 +1,8 @@
 function [ datasets_2ch datasets_3ch ] = ...
-  helper_makeDatasetsTransfer( sampcount, samp_shift )
+  helper_makeDatasetsTransfer( sampcount, samp_shift, signaltype )
 
 % function [ datasets_2ch datasets_3ch ] = ...
-%   helper_makeDatasetsTransfer( sampcount, samp_shift )
+%   helper_makeDatasetsTransfer( sampcount, samp_shift, signaltype )
 %
 % This builds data series used for testing calculation of transfer entropy.
 % and partial transfer entropy. Signal pairs that are correlated may be
@@ -14,6 +14,7 @@ function [ datasets_2ch datasets_3ch ] = ...
 % "sampcount" is the desired number of samples per series.
 % "samp_shift" is the number of samples by which data series should be
 %   shifted forward or backward in time, for time-lagged signals.
+% "signaltype" is 'noise' or 'sine'.
 %
 % "datasets_2ch" is a Nx3 cell array. Element {k,1} is a 2 x Nsamples matrix
 %   containing data samples, element {k,2} is a short plot- and
@@ -27,10 +28,10 @@ function [ datasets_2ch datasets_3ch ] = ...
 
 % Make several uncorrelated noise series. One of them's our "signal".
 
-data_te_data = rand([ 1 sampcount ]);
+data_te_data = helper_makeDataSignal(sampcount, signaltype);
 
-data_te_noise1 = rand([ 1 sampcount ]);
-data_te_noise2 = rand([ 1 sampcount ]);
+data_te_noise1 = helper_makeDataSignal(sampcount, signaltype);
+data_te_noise2 = helper_makeDataSignal(sampcount, signaltype);
 
 
 % Explicitly smear the data signal by one sample.

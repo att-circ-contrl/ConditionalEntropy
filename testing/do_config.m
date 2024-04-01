@@ -17,7 +17,9 @@ want_sweep_histbins = true;
 
 want_parallel = true;
 
-want_test_ft = true;
+want_test_ft = false;
+
+want_plot_signals = false;
 
 
 %
@@ -37,6 +39,11 @@ swept_sampcounts = [ swept_sampcounts 30000 100000 ];
 %swept_sampcounts = [ swept_sampcounts 3000000 10000000 ];
 
 ft_trials = 10;
+
+%signal_type = 'noise';
+signal_type = 'sine';
+
+signal_plot_samps = 300;
 
 
 %

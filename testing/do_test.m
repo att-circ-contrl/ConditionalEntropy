@@ -26,15 +26,16 @@ end
 
 
 datasets_entropy = helper_makeDatasetsShannon(sampcount);
-datasets_mutual = helper_makeDatasetsMutual(sampcount);
+datasets_mutual = helper_makeDatasetsMutual(sampcount, signal_type);
 [ datasets_te_2ch datasets_te_3ch ] = ...
-  helper_makeDatasetsTransfer(sampcount, te_test_lag);
+  helper_makeDatasetsTransfer(sampcount, te_test_lag, signal_type);
 
 % Build Field Trip sets whether we test them or not.
 ftsamps = round(sampcount / ft_trials);
-datasets_mutual_ft = helper_makeDatasetsMutual_FT(ftsamps, ft_trials);
+datasets_mutual_ft = ...
+  helper_makeDatasetsMutual_FT(ftsamps, ft_trials, signal_type);
 [ datasets_te_2ch_ft datasets_te_3ch_ft ] = ...
-  helper_makeDatasetsTransfer_FT(ftsamps, ft_trials, te_test_lag);
+  helper_makeDatasetsTransfer_FT(ftsamps, ft_trials, te_test_lag, signal_type);
 
 
 if want_test_entropy && want_nonswept
@@ -448,6 +449,42 @@ end
 
 
 %
+% Plot the test signals, if desired.
+
+if want_plot_signals
+
+  % NOTE - Getting channel names from the FT versions of the datasets.
+
+  if want_test_mutual || want_test_conditional
+    for didx = 1:size(datasets_mutual,2)
+      helper_plotDataSignals( datasets_mutual{didx,1}, ...
+        datasets_mutual_ft{didx,1}.label, signal_plot_samps, ...
+        [ 'CE/MI Signals - ' datasets_mutual{didx,3} ], ...
+        [ plotdir filesep 'signals-mi-' datasets_mutual{didx,2} ] );
+    end
+  end
+
+  if want_test_transfer
+    for didx = 1:size(datasets_te_2ch,2)
+      helper_plotDataSignals( datasets_te_2ch{didx,1}, ...
+        datasets_te_2ch_ft{didx,1}.label, signal_plot_samps, ...
+        [ 'TE Signals - ' datasets_te_2ch{didx,3} ], ...
+        [ plotdir filesep 'signals-te-' datasets_te_2ch{didx,2} ] );
+    end
+
+    for didx = 1:size(datasets_te_3ch,2)
+      helper_plotDataSignals( datasets_te_3ch{didx,1}, ...
+        datasets_te_3ch_ft{didx,1}.label, signal_plot_samps, ...
+        [ 'TE Signals - ' datasets_te_3ch{didx,3} ], ...
+        [ plotdir filesep 'signals-te-' datasets_te_3ch{didx,2} ] );
+    end
+  end
+
+end
+
+
+
+%
 % Swept tests.
 
 
@@ -542,9 +579,10 @@ if want_sweep_sampcount
     % Conditional entropy.
 
     if want_test_conditional
-      thisdatasetlist = helper_makeDatasetsMutual( thissampcount );
+      thisdatasetlist = ...
+        helper_makeDatasetsMutual( thissampcount, signal_type );
       thisdatasetlist_ft = ...
-        helper_makeDatasetsMutual_FT( thisftsamps, ft_trials );
+        helper_makeDatasetsMutual_FT( thisftsamps, ft_trials, signal_type );
 
       tic;
 
@@ -587,9 +625,10 @@ if want_sweep_sampcount
     % Mutual information.
 
     if want_test_mutual
-      thisdatasetlist = helper_makeDatasetsMutual( thissampcount );
+      thisdatasetlist = ...
+        helper_makeDatasetsMutual( thissampcount, signal_type );
       thisdatasetlist_ft = ...
-        helper_makeDatasetsMutual_FT( thisftsamps, ft_trials );
+        helper_makeDatasetsMutual_FT( thisftsamps, ft_trials, signal_type );
 
       tic;
 
@@ -630,9 +669,10 @@ if want_sweep_sampcount
 
     if want_test_transfer
       [ thisdatasetlist_2ch thisdatasetlist_3ch ] = ...
-        helper_makeDatasetsTransfer( thissampcount, te_test_lag );
+        helper_makeDatasetsTransfer( thissampcount, te_test_lag, signal_type );
       [ thisdatasetlist_2ch_ft thisdatasetlist_3ch_ft ] = ...
-        helper_makeDatasetsTransfer_FT( thisftsamps, ft_trials, te_test_lag );
+        helper_makeDatasetsTransfer_FT( ...
+          thisftsamps, ft_trials, te_test_lag, signal_type );
 
       % 2-channel transfer entropy.
 

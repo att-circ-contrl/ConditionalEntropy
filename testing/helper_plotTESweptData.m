@@ -1,17 +1,27 @@
 function helper_plotTESweptData( ...
-  datavals, laglist, sampcountlist, histbinlist, ...
+  datavals, laglist, testlag, sampcountlist, histbinlist, ...
   datalabels, datatitles, axistitle, titleprefix, fileprefix )
 
 % function helper_plotSweptData( ...
-%   datavals, laglist, sampcountlist, histbinlist, ...
+%   datavals, laglist, testlag, sampcountlist, histbinlist, ...
 %   datalabels, datatitles, axistitle, titleprefix, fileprefix )
 %
-% This generates one plot per data case, with one curve per bin count,
-% plotting entropy as a function of sample count.
+% This generates three types of transfer entropy plot.
+%
+% The first type generates one plot per data case and bin count, with one
+% curve per sample count, plotting entropy as a function of time lag.
+%
+% The second type generates one plot per data case, with one curve per bin
+% count, plotting entropy as a function of sample count at the "test" time
+% lag.
+%
+% The third type generates one plot per bin count and sample count, with
+% one curve per data case, plotting entropy as a function of time lag.
 %
 % "datavals" is a matrix of size Nlags x Nsampcounts x Nhistbins x Ndatacases,
 %   containing transfer entropy data.
 % "laglist" is a vector containing time lags (in samples).
+% "testlag" is a scalar with a time lag to use for single-lag plots.
 % "sampcountlist" is a vector containing sample counts.
 % "histbinlist" is a vector containing histogram bin counts.
 % "datalabels" is a cell array containing filename- and plot-safe data case
@@ -27,11 +37,46 @@ function helper_plotTESweptData( ...
 % No return value.
 
 
+% Get geometry metadata.
+
+datacount = length(datalabels);
+bincount = length(histbinlist);
+sizecount = length(sampcountlist);
+
+
+% Tolerate the test lag not being in the list.
+
+distlist = laglist - testlag;
+distlist = distlist .* distlist;
+
+bestdist = min(distlist);
+
+% Epsilon of 0.1 is fine, since sample counts and distances are integers.
+testlagidx = find( distlist < (bestdist + 0.1) );
+
+% Tolerate multiple outputs. Might happen if testlag is between two list lags.
+testlagidx = min(testlagidx);
+
+% Tolerate empty output. Shouldn't happen unless laglist is empty.
+if isempty(testlagidx)
+  testlagidx = 1;
+end
+
+
+
+% Set up for plotting.
+
 thisfig = figure();
 figure(thisfig);
 
-for didx = 1:length(datalabels)
-  for bidx = 1:length(histbinlist)
+
+
+% Entropy as a function of time lag.
+% One plot per data case and bin count.
+% One curve per sample count.
+
+for didx = 1:datacount
+  for bidx = 1:bincount
 
     % FIXME - Kludge the upper bound.
     % We have three situations: Either it's near log2(bins), or it's 1-2 bits,
@@ -40,7 +85,7 @@ for didx = 1:length(datalabels)
     ymaxval = log2(histbinlist(bidx));
     datamaxval = datavals(:,:,bidx,didx);
     datamaxval = max(datamaxval, [], 'all');
-    ymaxval = min(datamaxval, ymaxval);
+    ymaxval = min(datamaxval, ymaxval) + 0.5;
     ymaxval = max(1, ymaxval);
 
 
@@ -48,7 +93,7 @@ for didx = 1:length(datalabels)
 
     hold on;
 
-    for sidx = 1:length(sampcountlist)
+    for sidx = 1:sizecount
       thisdata = datavals(:,sidx,bidx,didx);
       thisdata = reshape(thisdata, size(laglist));
 
@@ -60,24 +105,142 @@ for didx = 1:length(datalabels)
         [ helper_makePrettyCount(sampcountlist(sidx)) ' samples' ] );
     end
 
+    plot( laglist, zeros(size(laglist)), 'HandleVisibility', 'off', ...
+      'Color', [ 0.5 0.5 0.5 ] );
+
     hold off;
 
     xlabel('Time Lag (samples)');
     ylabel(axistitle);
 
-    ylim([ 0 ymaxval ]);
+    ylim([ -0.25 ymaxval ]);
 
-    legend('Location', 'southwest');
+    legend('Location', 'northwest');
 
     title([ titleprefix ' - ' datatitles{didx} ...
       sprintf(' - %d bins', histbinlist(bidx)) ]);
 
-    saveas( thisfig, [ fileprefix '-' datalabels{didx} ...
+    saveas( thisfig, [ fileprefix '-laglength-' datalabels{didx} ...
       sprintf('-%02dbins.png', histbinlist(bidx)) ] );
 
   end
 end
 
+
+
+% Entropy as a function of time lag.
+% One plot per bin count and sample count.
+% One curve per data case.
+
+for bidx = 1:bincount
+  for sidx = 1:sizecount
+
+    % FIXME - Kludge the upper bound.
+    % We have three situations: Either it's near log2(bins), or it's 1-2 bits,
+    % or it's absurdly high due to an extrapolation error. Force the first two.
+
+    ymaxval = log2(histbinlist(bidx));
+    datamaxval = datavals(:,sidx,bidx,:);
+    datamaxval = max(datamaxval, [], 'all');
+    ymaxval = min(datamaxval, ymaxval) + 0.5;
+    ymaxval = max(1, ymaxval);
+
+
+    clf('reset');
+
+    hold on;
+
+    for didx = 1:datacount
+
+      thisdata = datavals(:,sidx,bidx,didx);
+      thisdata = reshape(thisdata, size(laglist));
+
+      % NOTE - Squash "lag = 0". It's always zero.
+      squashmask = ( abs(laglist) < 0.5 );
+      thisdata(squashmask) = NaN;
+
+      plot( laglist, thisdata, 'DisplayName', datatitles{didx} );
+    end
+
+    plot( laglist, zeros(size(laglist)), 'HandleVisibility', 'off', ...
+      'Color', [ 0.5 0.5 0.5 ] );
+
+    hold off;
+
+    xlabel('Time Lag (samples)');
+    ylabel(axistitle);
+
+    ylim([ -0.25 ymaxval ]);
+
+    legend('Location', 'northwest');
+
+    countlabel = helper_makePrettyCount(sampcountlist(sidx));
+
+    title([ titleprefix ' - ' sprintf(' - %d bins - ', histbinlist(bidx)) ...
+      countlabel ' samples' ]);
+
+    saveas( thisfig, [ fileprefix '-lagcase-' ...
+      sprintf('%02dbins', histbinlist(bidx)) '-' countlabel 'samp.png' ] );
+
+  end
+end
+
+
+
+% Entropy as a function of sample count.
+% One plot per data case.
+% One curve per bin count.
+% Fixed time lag.
+
+for didx = 1:datacount
+
+  % FIXME - Kludge the upper bound.
+  % We have three situations: Either it's near log2(bins), or it's 1-2 bits,
+  % or it's absurdly high due to an extrapolation error. Force the first two.
+
+  ymaxval = log2(max(histbinlist));
+  datamaxval = datavals(testlagidx,:,:,didx);
+  datamaxval = max(datamaxval, [], 'all');
+  ymaxval = min(datamaxval, ymaxval) + 0.5;
+  ymaxval = max(1, ymaxval);
+
+
+  clf('reset');
+
+  hold on;
+
+  for bidx = 1:bincount
+    thisdata = datavals(testlagidx,:,bidx,didx);
+    thisdata = reshape(thisdata, size(sampcountlist));
+
+    plot( sampcountlist, thisdata, 'DisplayName', ...
+      sprintf('%d bins', histbinlist(bidx)) );
+  end
+
+  plot( sampcountlist, zeros(size(sampcountlist)), ...
+    'HandleVisibility', 'off', 'Color', [ 0.5 0.5 0.5 ] );
+
+  hold off;
+
+  xlabel('Sample Count');
+  ylabel(axistitle);
+
+  set(gca, 'Xscale', 'log');
+
+  ylim([ -0.25 ymaxval ]);
+
+  legend('Location', 'southwest');
+
+  title([ titleprefix ' - ' datatitles{didx} ...
+    sprintf(' - Lag %+d samps', testlag) ]);
+
+  saveas( thisfig, [ fileprefix '-binlength-' datalabels{didx} '.png' ] );
+
+end
+
+
+
+% Finished plotting.
 
 close(thisfig);
 

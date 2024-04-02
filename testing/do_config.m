@@ -33,8 +33,11 @@ te_test_lag = 5;
 
 swept_histbins = [ 8 16 32 ];
 
-swept_sampcounts = [ 10000 ];
-swept_sampcounts = [ swept_sampcounts 30000 100000 ];
+swept_sampcounts = [ ];
+%swept_sampcounts = [ swept_sampcounts 3000 ];
+swept_sampcounts = [ swept_sampcounts 10000 ];
+swept_sampcounts = [ swept_sampcounts 30000 ];
+swept_sampcounts = [ swept_sampcounts 100000 ];
 %swept_sampcounts = [ swept_sampcounts 300000 1000000 ];
 %swept_sampcounts = [ swept_sampcounts 3000000 10000000 ];
 

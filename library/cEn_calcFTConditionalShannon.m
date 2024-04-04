@@ -1,6 +1,8 @@
-function bits = cEn_calcFTMutualInfo( ftdata, chanlist, numbins, exparams )
+function bits = ...
+  cEn_calcFTConditionalShannon( ftdata, chanlist, numbins, exparams )
 
-% function bits = cEn_calcFTMutualInfo( ftdata, chanlist, numbins, exparams )
+% function bits = ...
+%   cEn_calcFTConditionalShannon( ftdata, chanlist, numbins, exparams )
 %
 % This calculates the conditional entropy associated with a set of signals.
 % This is the average amount of additional information that a sample from

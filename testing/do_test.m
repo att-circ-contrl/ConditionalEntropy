@@ -441,7 +441,7 @@ if want_test_transfer && want_nonswept
   disp(thismsg);
   reportmsg = [ reportmsg thismsg newline ];
 
-  helper_writeTextFile( [ outdir filesep 'report-conditional.txt' ], ...
+  helper_writeTextFile( [ outdir filesep 'report-transfer.txt' ], ...
     reportmsg );
 
 end

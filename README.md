@@ -10,11 +10,11 @@ FIXME - References go here.
 
 ## Folders
 
-* `examples` -- Sample code that uses this library.
 * `library` -- Matlab library function code.
 * `manual` -- Project documentation PDFs.
 * `manual-src` -- LaTeX files for rebuilding project documentation.
-* `testing` -- Test scripts used during development. Cleaned-up versions
-will end up in the `examples` folder.
+* `sample-code` -- Example code that uses this library.
+* `testing` -- Test scripts used during development. The sample code is a
+cleaned-up subset of this.
 
 _(This is the end of the file.)_

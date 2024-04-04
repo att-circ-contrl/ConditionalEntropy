@@ -6,6 +6,7 @@
 % Preamble.
 
 addpath('../library');
+addpath('../library/deprecated');
 
 do_config;
 
@@ -63,9 +64,21 @@ if want_test_entropy && want_nonswept
 
     thismsg = '';
 
-    [ bincounts scratch ] = histcounts( reshape(thisdata,1,[]), binedges );
-    thisentropy = cEn_calcShannonHist( bincounts );
+    if strcmp('hist', shannon_method)
+      % Direct histogram test.
+      [ bincounts scratch ] = histcounts( reshape(thisdata,1,[]), binedges );
+      thisentropy = cEn_calcShannonHist( bincounts );
+    elseif strcmp('edges', shannon_method)
+      % Calculate specifying edges.
+      thisentropy = cEn_calcShannon( thisdata, binedges );
+    else  % Assume 'bins'.
+      % Calculate specifying bin count.
+      thisentropy = cEn_calcShannon( thisdata, histbins );
+    end
+
     thismsg = [ thismsg sprintf( '  %6.2f (my lib)', thisentropy ) ];
+
+    % NOTE - Extrapolated Shannon is deprecated.
 
     % Test that extrapolation can fall back to non-extrapolated.
     thisentropy = cEn_calcExtrapShannon( thisdata, binedges, ...
@@ -103,9 +116,21 @@ if want_test_entropy && want_nonswept
       thisentropy = entropy( thisdata );
       thismsg = [ thismsg sprintf( '  %6.2f (matlab)', thisentropy ) ];
 
-      [ bincounts scratch ] = histcounts( reshape(thisdata,1,[]), binedges );
-      thisentropy = cEn_calcShannonHist( bincounts );
+      if strcmp('hist', shannon_method)
+        % Direct histogram test.
+        [ bincounts scratch ] = histcounts( reshape(thisdata,1,[]), binedges );
+        thisentropy = cEn_calcShannonHist( bincounts );
+      elseif strcmp('edges', shannon_method)
+        % Calculate specifying edges.
+        thisentropy = cEn_calcShannon( thisdata, binedges );
+      else  % Assume 'bins'.
+        % Calculate specifying bin count.
+        thisentropy = cEn_calcShannon( thisdata, entropy_builtin_bins );
+      end
+
       thismsg = [ thismsg sprintf( '  %6.2f (my lib)', thisentropy ) ];
+
+      % NOTE - Extrapolated Shannon is deprecated.
 
       thisentropy = cEn_calcExtrapShannon( thisdata, binedges, struct() );
       thismsg = [ thismsg sprintf( '  %6.2f (extrap)', thisentropy ) ];
@@ -562,9 +587,24 @@ if want_sweep_sampcount
         thisdata = thisdatasetlist{didx,1};
         for bidx = 1:binsweepsize
           binedges = linspace(0, 1, swept_histbins(bidx));
-          [ bincounts scratch ] = ...
-            histcounts( reshape(thisdata, 1, []), binedges );
-          entropyraw( sidx, bidx, didx ) = cEn_calcShannonHist( bincounts );
+
+          if strcmp('hist', shannon_method)
+            % Direct histogram test.
+            [ bincounts scratch ] = ...
+              histcounts( reshape(thisdata, 1, []), binedges );
+            entropyraw( sidx, bidx, didx ) = cEn_calcShannonHist( bincounts );
+          elseif strcmp('edges', shannon_method)
+            % Calculate specifying edges.
+            entropyraw( sidx, bidx, didx ) = ...
+              cEn_calcShannon( thisdata, binedges );
+          else  % Assume 'bins'.
+            % Calculate specifying bin count.
+            entropyraw( sidx, bidx, didx ) = ...
+              cEn_calcShannon( thisdata, swept_histbins(bidx) );
+          end
+
+          % NOTE - Extrapolated Shannon is deprecated.
+
           entropyext( sidx, bidx, didx ) = ...
             cEn_calcExtrapShannon( thisdata, binedges, struct() );
         end

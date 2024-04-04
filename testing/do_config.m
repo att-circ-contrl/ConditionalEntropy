@@ -6,9 +6,9 @@
 % Switches.
 
 want_test_entropy = true;
-want_test_conditional = true;
-want_test_mutual = true;
-want_test_transfer = true;
+want_test_conditional = false;
+want_test_mutual = false;
+want_test_transfer = false;
 
 want_nonswept = true;
 
@@ -26,7 +26,7 @@ want_plot_signals = false;
 % Geometry.
 
 sampcount = 10000;
-histbins = 16;
+histbins = 32;
 
 te_laglist = [-10:10];
 te_test_lag = 5;
@@ -43,17 +43,29 @@ swept_sampcounts = [ swept_sampcounts 100000 ];
 
 ft_trials = 10;
 
+
+%
+% Test signal parameters.
+
 %signal_type = 'noise';
 signal_type = 'sine';
+
+
+%
+% Plotting parameters.
 
 signal_plot_samps = 300;
 
 
 %
-% Library support.
+% Shannon entropy test config
 
 have_entropy = exist('entropy');
 entropy_builtin_bins = 256;
+
+%shannon_method = 'hist';
+shannon_method = 'edges';
+%shannon_method = 'bins';
 
 
 %

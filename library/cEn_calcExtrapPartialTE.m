@@ -95,12 +95,9 @@ for lidx = 1:length(laglist)
   % We're doing extrapolation before subtraction. These gave very similar
   % output in my tests, and we'd otherwise have to calculate H_yab twice.
 
-  H_ya = ...
-    cEn_calcExtrapConditionalShannon( datamatrix_ya, numbins, exparams );
-  H_yb = ...
-    cEn_calcExtrapConditionalShannon( datamatrix_yb, numbins, exparams );
-  H_yab = ...
-    cEn_calcExtrapConditionalShannon( datamatrix_yab, numbins, exparams );
+  H_ya = cEn_calcConditionalShannon( datamatrix_ya, numbins, exparams );
+  H_yb = cEn_calcConditionalShannon( datamatrix_yb, numbins, exparams );
+  H_yab = cEn_calcConditionalShannon( datamatrix_yab, numbins, exparams );
 
   % Output 1 (A) is conditioned on B, and vice versa.
   thiste1 = H_yb - H_yab;

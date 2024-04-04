@@ -5,19 +5,19 @@
 %
 % Switches.
 
-want_test_entropy = true;
-want_test_conditional = false;
+want_test_entropy = false;
+want_test_conditional = true;
 want_test_mutual = false;
 want_test_transfer = false;
 
-want_nonswept = false;
+want_nonswept = true;
 
-want_sweep_sampcount = true;
-want_sweep_histbins = true;
+want_sweep_sampcount = false;
+want_sweep_histbins = false;
 
 want_parallel = false;
 
-want_test_ft = false;
+want_test_ft = true;
 
 want_plot_signals = false;
 
@@ -34,10 +34,10 @@ te_test_lag = 5;
 swept_histbins = [ 8 16 32 ];
 
 swept_sampcounts = [ ];
-%swept_sampcounts = [ swept_sampcounts 3000 ];
+swept_sampcounts = [ swept_sampcounts 3000 ];
 swept_sampcounts = [ swept_sampcounts 10000 ];
 swept_sampcounts = [ swept_sampcounts 30000 ];
-swept_sampcounts = [ swept_sampcounts 100000 ];
+%swept_sampcounts = [ swept_sampcounts 100000 ];
 %swept_sampcounts = [ swept_sampcounts 300000 1000000 ];
 %swept_sampcounts = [ swept_sampcounts 3000000 10000000 ];
 

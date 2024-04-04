@@ -171,18 +171,26 @@ if want_test_conditional && want_nonswept
     [ thisbinned scratch ] = cEn_getBinnedMultivariate( thisdata, histbins );
     thisentropy = cEn_calcConditionalShannonHist( thisbinned );
 
-    thismsg = [ thismsg sprintf( '  %6.2f (raw)', thisentropy ) ];
+    thismsg = [ thismsg sprintf( ' %6.2f (hs)', thisentropy ) ];
 
-    thisentropy = ...
-      cEn_calcExtrapConditionalShannon( thisdata, histbins, struct() );
+    thisentropy = cEn_calcConditionalShannon( thisdata, histbins );
 
-    thismsg = [ thismsg sprintf( '  %6.2f (extrap)', thisentropy ) ];
+    thismsg = [ thismsg sprintf( ' %6.2f (raw)', thisentropy ) ];
+
+    thisentropy = cEn_calcConditionalShannon( thisdata, histbins, struct() );
+
+    thismsg = [ thismsg sprintf( ' %6.2f (ext)', thisentropy ) ];
 
     if want_test_ft
       thisdata = datasets_mutual_ft{didx,1};
+
       thisentropy = ...
-        cEn_calcFTConditionalShannon( thisdata, {}, histbins, struct() );
-      thismsg = [ thismsg sprintf( '  %6.2f (ft)', thisentropy ) ];
+        cEn_calcConditionalShannonFT( thisdata, {}, histbins );
+      thismsg = [ thismsg sprintf( ' %6.2f (rft)', thisentropy ) ];
+
+      thisentropy = ...
+        cEn_calcConditionalShannonFT( thisdata, {}, histbins, struct() );
+      thismsg = [ thismsg sprintf( ' %6.2f (eft)', thisentropy ) ];
     end
 
     thismsg = [ thismsg '   ' datatitle ];
@@ -632,25 +640,23 @@ if want_sweep_sampcount
 
           for bidx = 1:binsweepsize
             conditionalraw( sidx, bidx, didx ) = ...
-              cEn_calcFTConditionalShannon( ...
-                thisdata, {}, swept_histbins(bidx), ...
-                cEn_getNoExtrapWrapperParams() );
+              cEn_calcConditionalShannonFT( ...
+                thisdata, {}, swept_histbins(bidx) );
 
             conditionalext( sidx, bidx, didx ) = ...
-              cEn_calcFTConditionalShannon( ...
+              cEn_calcConditionalShannonFT( ...
                 thisdata, {}, swept_histbins(bidx), struct() );
           end
         else
           thisdata = thisdatasetlist{didx,1};
 
           for bidx = 1:binsweepsize
-            [ thisbinned scratch ] = ...
-              cEn_getBinnedMultivariate( thisdata, swept_histbins(bidx) );
             conditionalraw( sidx, bidx, didx ) = ...
-              cEn_calcConditionalShannonHist( thisbinned );
+              cEn_calcConditionalShannon( ...
+                thisdata, swept_histbins(bidx) );
 
             conditionalext( sidx, bidx, didx ) = ...
-              cEn_calcExtrapConditionalShannon( ...
+              cEn_calcConditionalShannon( ...
                 thisdata, swept_histbins(bidx), struct() );
           end
         end

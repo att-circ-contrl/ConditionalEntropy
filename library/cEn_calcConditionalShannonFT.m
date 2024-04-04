@@ -1,8 +1,8 @@
 function bits = ...
-  cEn_calcFTConditionalShannon( ftdata, chanlist, numbins, exparams )
+  cEn_calcConditionalShannonFT( ftdata, chanlist, numbins, exparams )
 
 % function bits = ...
-%   cEn_calcFTConditionalShannon( ftdata, chanlist, numbins, exparams )
+%   cEn_calcConditionalShannonFT( ftdata, chanlist, numbins, exparams )
 %
 % This calculates the conditional entropy associated with a set of signals.
 % This is the average amount of additional information that a sample from
@@ -11,8 +11,8 @@ function bits = ...
 % This processes Field Trip data as input, concatenating trials.
 %
 % This needs a large number of samples to generate accurate results. To
-% compensate for smaller sample counts, this uses the extrapolation method
-% described in EXTRAPOLATION.txt.
+% compensate for smaller sample counts, this may optionally use the
+% extrapolation method described in EXTRAPOLATION.txt.
 %
 % "ftdata" is a ft_datatype_raw data structure produced by Field Trip.
 % "chanlist" is a cell array containing channel labels or a vector containing
@@ -21,8 +21,9 @@ function bits = ...
 %   X_k.
 % "numbins" is either a vector of length Nchans or a scalar, indicating how
 %   many histogram bins to use for each channel's data.
-% "exparams" is a structure containing extrapolation tuning parameters, per
-%   EXTRAPOLATION.txt. This may be empty.
+% "exparams" is an optional structure containing extrapolation tuning
+%   parameters, per EXTRAPOLATION.txt. If this is empty, default parameters
+%   are used. If this is absent, no extrapolation is performed.
 %
 % "bits" is a scalar with the average additional entropy provided by an
 %   observation of Y, when all X_k are known.
@@ -32,7 +33,11 @@ function bits = ...
 dataseries = cEn_ftHelperConcatTrials( ftdata, chanlist );
 
 % Wrap the non-FT function.
-bits = cEn_calcExtrapConditionalShannon( dataseries, numbins, exparams );
+if exist('exparams', 'var')
+  bits = cEn_calcConditionalShannon( dataseries, numbins, exparams );
+else
+  bits = cEn_calcConditionalShannon( dataseries, numbins );
+end
 
 
 %

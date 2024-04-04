@@ -79,8 +79,8 @@ for lidx = 1:length(laglist)
   else
     % Extrapolate and then subtract.
     thiste = ...
-      cEn_calcExtrapConditionalShannon( datamatrix_y, numbins, exparams ) ...
-      - cEn_calcExtrapConditionalShannon( datamatrix_yx, numbins, exparams );
+      cEn_calcConditionalShannon( datamatrix_y, numbins, exparams ) ...
+      - cEn_calcConditionalShannon( datamatrix_yx, numbins, exparams );
   end
 
   telist(lidx) = thiste;

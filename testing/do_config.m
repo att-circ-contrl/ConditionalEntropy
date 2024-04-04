@@ -6,16 +6,16 @@
 % Switches.
 
 want_test_entropy = false;
-want_test_conditional = true;
-want_test_mutual = true;
-want_test_transfer = false;
+want_test_conditional = false;
+want_test_mutual = false;
+want_test_transfer = true;
 
 want_nonswept = true;
 
 want_sweep_sampcount = true;
 want_sweep_histbins = true;
 
-want_parallel = false;
+want_parallel = true;
 
 want_test_ft = true;
 

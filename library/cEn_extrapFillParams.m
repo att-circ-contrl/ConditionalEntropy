@@ -1,6 +1,6 @@
-function newparams = cEn_fillExtrapWrapperParams( oldparams )
+function newparams = cEn_extrapFillParams( oldparams )
 
-% function newparams = cEn_fillExtrapWrapperParams( oldparams )
+% function newparams = cEn_extrapFillParams( oldparams )
 %
 % This function fills in missing fields in extrapolation parameter
 % structures used by cEn_calcExtrapWrapper(), per EXTRAPOLATION.txt.

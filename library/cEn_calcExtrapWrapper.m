@@ -42,7 +42,7 @@ function outval = cEn_calcExtrapWrapper( dataseries, datafunc, exparams )
 %
 % Check tuning parameters and fill in defaults.
 
-exparams = cEn_fillExtrapWrapperParams( exparams );
+exparams = cEn_extrapFillParams( exparams );
 
 
 %

@@ -36,7 +36,7 @@ for didx = 1:length(datalabels)
   ymaxval = log2(max(histbinlist));
   datamaxval = datavals(:,:,didx);
   datamaxval = max(datamaxval, [], 'all');
-  ymaxval = min(datamaxval, ymaxval);
+  ymaxval = min(datamaxval, ymaxval) + 0.5;
   ymaxval = max(1, ymaxval);
 
 
@@ -51,6 +51,9 @@ for didx = 1:length(datalabels)
       'DisplayName', sprintf('%d bins', histbinlist(bidx)) );
   end
 
+  plot( sampcountlist, zeros(size(sampcountlist)), ...
+    'HandleVisibility', 'off', 'Color', [ 0.5 0.5 0.5 ] );
+
   hold off;
 
   xlabel('Sample Count');
@@ -58,7 +61,7 @@ for didx = 1:length(datalabels)
 
   set(gca, 'Xscale', 'log');
 
-  ylim([ 0 ymaxval ]);
+  ylim([ -0.25 ymaxval ]);
 
   legend('Location', 'southwest');
 

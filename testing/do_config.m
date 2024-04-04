@@ -10,10 +10,10 @@ want_test_conditional = false;
 want_test_mutual = false;
 want_test_transfer = false;
 
-want_nonswept = true;
+want_nonswept = false;
 
-want_sweep_sampcount = false;
-want_sweep_histbins = false;
+want_sweep_sampcount = true;
+want_sweep_histbins = true;
 
 want_parallel = false;
 

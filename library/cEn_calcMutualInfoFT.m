@@ -1,6 +1,6 @@
-function bits = cEn_calcFTMutualInfo( ftdata, chanlist, numbins, exparams )
+function bits = cEn_calcMutualInfoFT( ftdata, chanlist, numbins, exparams )
 
-% function bits = cEn_calcFTMutualInfo( ftdata, chanlist, numbins, exparams )
+% function bits = cEn_calcMutualInfoFT( ftdata, chanlist, numbins, exparams )
 %
 % This calculates the mutual information associated with a set of signals.
 % This is the amount of information shared between the variables, as
@@ -10,16 +10,17 @@ function bits = cEn_calcFTMutualInfo( ftdata, chanlist, numbins, exparams )
 % This processes Field Trip data as input, concatenating trials.
 %
 % This needs a large number of samples to generate accurate results. To
-% compensate for smaller sample counts, this uses the extrapolation method
-% described in EXTRAPOLATION.txt.
+% compensate for smaller sample counts, this may optionally use the
+% extrapolation method described in EXTRAPOLATION.txt.
 %
 % "ftdata" is a ft_datatype_raw data structure produced by Field Trip.
 % "chanlist" is a cell array containing channel labels or a vector containing
 %   channel indices. If the list is empty, all channels are used.
 % "numbins" is either a vector of length Nchans or a scalar, indicating how
 %   many histogram bins to use for each channel's data.
-% "exparams" is a structure containing extrapolation tuning parameters, per
-%   EXTRAPOLATION.txt. This may be empty.
+% "exparams" is an optional structure containing extrapolation tuning
+%   parameters, per EXTRAPOLATION.txt. If this is empty, default parameters
+%   are used. If this is absent, no extrapolation is performed.
 %
 % "bits" is a scalar with the mutual information, computed as the reduction
 %   in information content vs the joint distribution of independent variables.
@@ -29,7 +30,11 @@ function bits = cEn_calcFTMutualInfo( ftdata, chanlist, numbins, exparams )
 dataseries = cEn_ftHelperConcatTrials( ftdata, chanlist );
 
 % Wrap the non-FT function.
-bits = cEn_calcExtrapMutualInfo( dataseries, numbins, exparams );
+if exist('exparams', 'var')
+  bits = cEn_calcMutualInfo( dataseries, numbins, exparams );
+else
+  bits = cEn_calcMutualInfo( dataseries, numbins );
+end
 
 
 %

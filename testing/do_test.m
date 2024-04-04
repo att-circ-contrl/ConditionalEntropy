@@ -230,17 +230,26 @@ if want_test_mutual && want_nonswept
     [ thisbinned scratch ] = cEn_getBinnedMultivariate( thisdata, histbins );
     thismutual = cEn_calcMutualInfoHist( thisbinned );
 
-    thismsg = [ thismsg sprintf( '  %6.2f (raw)', thismutual ) ];
+    thismsg = [ thismsg sprintf( ' %6.2f (hs)', thismutual ) ];
 
-    thismutual = cEn_calcExtrapMutualInfo( thisdata, histbins, struct() );
+    thismutual = cEn_calcMutualInfo( thisdata, histbins );
 
-    thismsg = [ thismsg sprintf( '  %6.2f (extrap)', thismutual ) ];
+    thismsg = [ thismsg sprintf( ' %6.2f (raw)', thismutual ) ];
+
+    thismutual = cEn_calcMutualInfo( thisdata, histbins, struct() );
+
+    thismsg = [ thismsg sprintf( ' %6.2f (ext)', thismutual ) ];
 
     if want_test_ft
       thisdata = datasets_mutual_ft{didx,1};
+
       thismutual = ...
-        cEn_calcFTMutualInfo( thisdata, {}, histbins, struct() );
-      thismsg = [ thismsg sprintf( '  %6.2f (ft)', thismutual ) ];
+        cEn_calcMutualInfoFT( thisdata, {}, histbins );
+      thismsg = [ thismsg sprintf( ' %6.2f (rft)', thismutual ) ];
+
+      thismutual = ...
+        cEn_calcMutualInfoFT( thisdata, {}, histbins, struct() );
+      thismsg = [ thismsg sprintf( ' %6.2f (eft)', thismutual ) ];
     end
 
     thismsg = [ thismsg '   ' datatitle ];
@@ -683,23 +692,20 @@ if want_sweep_sampcount
           thisdata = thisdatasetlist_ft{didx,1};
 
           for bidx = 1:binsweepsize
-            mutualraw( sidx, bidx, didx ) = cEn_calcFTMutualInfo( ...
-              thisdata, {}, swept_histbins(bidx), ...
-              cEn_getNoExtrapWrapperParams() );
+            mutualraw( sidx, bidx, didx ) = cEn_calcMutualInfoFT( ...
+              thisdata, {}, swept_histbins(bidx) );
 
-            mutualext( sidx, bidx, didx ) = cEn_calcFTMutualInfo( ...
+            mutualext( sidx, bidx, didx ) = cEn_calcMutualInfoFT( ...
               thisdata, {}, swept_histbins(bidx), struct() );
           end
         else
           thisdata = thisdatasetlist{didx,1};
 
           for bidx = 1:binsweepsize
-            [ thisbinned scratch ] = ...
-              cEn_getBinnedMultivariate( thisdata, swept_histbins(bidx) );
-            mutualraw( sidx, bidx, didx ) = ...
-              cEn_calcMutualInfoHist( thisbinned );
+            mutualraw( sidx, bidx, didx ) = cEn_calcMutualInfo( ...
+              thisdata, swept_histbins(bidx) );
 
-            mutualext( sidx, bidx, didx ) = cEn_calcExtrapMutualInfo( ...
+            mutualext( sidx, bidx, didx ) = cEn_calcMutualInfo( ...
               thisdata, swept_histbins(bidx), struct() );
           end
         end

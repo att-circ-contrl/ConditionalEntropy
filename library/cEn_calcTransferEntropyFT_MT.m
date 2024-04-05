@@ -1,8 +1,8 @@
 function telist = cEn_calcTransferEntropyFT_MT( ...
-  ftdata, srcchan, dstchan, laglist, numbins, exparams )
+  ftdata, srcchan, dstchan, laglist, bins, exparams )
 
 % function telist = cEn_calcTransferEntropyFT_MT( ...
-%   ftdata, srcchan, dstchan, laglist, numbins, exparams )
+%   ftdata, srcchan, dstchan, laglist, bins, exparams )
 %
 % This calculates the transfer entropy from Src to Dst, for a specified set
 % of time lags.
@@ -33,8 +33,11 @@ function telist = cEn_calcTransferEntropyFT_MT( ...
 %   containing a channel index. This specifies the destinaion channel Y.
 % "laglist" is a vector containing sample lags to test. These correspond to
 %   tau in the equation above. These may be negative (looking at the future).
-% "numbins" is the number of bins to use for each signal's data when
-%   constructing histograms.
+% "bins" is a scalar or vector (to generate bins) or a cell array (to supply
+%   bin definitions). If it's a vector of length Nchans or a scalar, it
+%   indicates how many bins to use for each channel's data. If it's a cell
+%   array, bins{chanidx} provides the list of edges used for binning each
+%   channel's data.
 % "exparams" is an optional structure containing extrapolation tuning
 %   parameters, per EXTRAPOLATION.txt. If this is empty, default parameters
 %   are used. If this is absent, no extrapolation is performed.
@@ -56,11 +59,11 @@ dstseries = cEn_ftHelperChannelToMatrix(ftdata, dstchan);
 if exist('exparams', 'var')
   % We were given an extrapolation configuration.
   telist = cEn_calcTransferEntropy_MT( ...
-    srcseries, dstseries, laglist, numbins, exparams );
+    srcseries, dstseries, laglist, bins, exparams );
 else
   % We were not given an extrapolation configuration.
   telist = cEn_calcTransferEntropy_MT( ...
-    srcseries, dstseries, laglist, numbins );
+    srcseries, dstseries, laglist, bins );
 end
 
 

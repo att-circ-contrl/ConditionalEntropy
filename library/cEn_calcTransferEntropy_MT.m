@@ -1,8 +1,8 @@
 function telist = cEn_calcTransferEntropy_MT( ...
-  srcseries, dstseries, laglist, numbins, exparams )
+  srcseries, dstseries, laglist, bins, exparams )
 
 % function telist = cEn_calcTransferEntropy_MT( ...
-%   srcseries, dstseries, laglist, numbins, exparams )
+%   srcseries, dstseries, laglist, bins, exparams )
 %
 % This is a wrapper for cEn_calcTransferEntropy() that tests different lags
 % in parallel with each other. This requires the Parallel Computing Toolbox.
@@ -29,8 +29,11 @@ function telist = cEn_calcTransferEntropy_MT( ...
 %   signal Y.
 % "laglist" is a vector containing sample lags to test. These correspond to
 %   tau in the equation above. These may be negative (looking at the future).
-% "numbins" is the number of bins to use for each signal's data when
-%   constructing histograms.
+% "bins" is a scalar or vector (to generate bins) or a cell array (to supply
+%   bin definitions). If it's a vector of length Nchans or a scalar, it
+%   indicates how many bins to use for each channel's data. If it's a cell
+%   array, bins{chanidx} provides the list of edges used for binning each
+%   channel's data.
 % "exparams" is an optional structure containing extrapolation tuning
 %   parameters, per EXTRAPOLATION.txt. If this is empty, default parameters
 %   are used. If this is absent, no extrapolation is performed.
@@ -47,7 +50,7 @@ if exist('exparams', 'var')
 
     % We were given an extrapolation configuration.
     telist(lagidx) = cEn_calcTransferEntropy( ...
-      srcseries, dstseries, thislag, numbins, exparams );
+      srcseries, dstseries, thislag, bins, exparams );
   end
 else
   parfor lagidx = 1:length(laglist)
@@ -55,7 +58,7 @@ else
 
     % We were not given an extrapolation configuration.
     telist(lagidx) = cEn_calcTransferEntropy( ...
-      srcseries, dstseries, thislag, numbins );
+      srcseries, dstseries, thislag, bins );
   end
 end
 

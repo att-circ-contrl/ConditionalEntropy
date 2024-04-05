@@ -1,8 +1,8 @@
 function telist = cEn_calcTransferEntropy( ...
-  srcseries, dstseries, laglist, numbins, exparams )
+  srcseries, dstseries, laglist, bins, exparams )
 
 % function telist = cEn_calcTransferEntropy( ...
-%   srcseries, dstseries, laglist, numbins, exparams )
+%   srcseries, dstseries, laglist, bins, exparams )
 %
 % This calculates the transfer entropy from Src to Dst, for a specified set
 % of time lags.
@@ -27,8 +27,11 @@ function telist = cEn_calcTransferEntropy( ...
 %   containing the destination signal Y.
 % "laglist" is a vector containing sample lags to test. These correspond to
 %   tau in the equation above. These may be negative (looking at the future).
-% "numbins" is the number of bins to use for each signal's data when
-%   constructing histograms.
+% "bins" is a scalar or vector (to generate bins) or a cell array (to supply
+%   bin definitions). If it's a vector of length Nchans or a scalar, it
+%   indicates how many bins to use for each channel's data. If it's a cell
+%   array, bins{chanidx} provides the list of edges used for binning each
+%   channel's data.
 % "exparams" is an optional structure containing extrapolation tuning
 %   parameters, per EXTRAPOLATION.txt. If this is empty, default parameters
 %   are used. If this is absent, no extrapolation is performed.
@@ -80,21 +83,29 @@ for lidx = 1:length(laglist)
 
     if false
       % Subtract and then extrapolate, per Palmigiano 2017.
+
       % Use a consistent set of edges for histogram binning during
       % extrapolation.
-      edges = cEn_getMultivariateHistBins( datamatrix_yx, numbins );
+      if iscell(bins)
+        % We were given edge lists.
+        edges = bins;
+      else
+        % We were given one or more bin counts; generate edge lists.
+        edges = cEn_getMultivariateHistBins( datamatrix_yx, bins );
+      end
+
       datafunc = @(funcdata) helper_calcTE( funcdata, edges );
       thiste = cEn_calcExtrapWrapper( datamatrix_yx, datafunc, exparams );
     else
       % Extrapolate and then subtract.
       thiste = ...
-        cEn_calcConditionalShannon( datamatrix_y, numbins, exparams ) ...
-        - cEn_calcConditionalShannon( datamatrix_yx, numbins, exparams );
+        cEn_calcConditionalShannon( datamatrix_y, bins, exparams ) ...
+        - cEn_calcConditionalShannon( datamatrix_yx, bins, exparams );
     end
   else
     % We were not given an extrapolation configuration; don't extrapolate.
-    thiste = cEn_calcConditionalShannon( datamatrix_y, numbins ) ...
-      - cEn_calcConditionalShannon( datamatrix_yx, numbins );
+    thiste = cEn_calcConditionalShannon( datamatrix_y, bins ) ...
+      - cEn_calcConditionalShannon( datamatrix_yx, bins );
   end
 
   telist(lidx) = thiste;

@@ -1,15 +1,15 @@
-function telist = cEn_calcExtrapTransferEntropy( ...
+function telist = cEn_calcTransferEntropy( ...
   srcseries, dstseries, laglist, numbins, exparams )
 
-% function telist = cEn_calcExtrapTransferEntropy( ...
+% function telist = cEn_calcTransferEntropy( ...
 %   srcseries, dstseries, laglist, numbins, exparams )
 %
 % This calculates the transfer entropy from Src to Dst, for a specified set
 % of time lags.
 %
 % NOTE - This needs a large number of samples to generate accurate results!
-% To compensate for smaller sample counts, this uses the extrapolation
-% method described in EXTRAPOLATION.txt (per Palmigiano 2017).
+% To compensate for smaller sample counts, this may optionally use the
+% extrapolation method described in EXTRAPOLATION.txt (per Palmigiano 2017).
 %
 % Transfer entropy from X to Y is defined as:
 %   TEx->y = H[Y|Ypast] - H[Y|Ypast,Xpast]
@@ -29,11 +29,16 @@ function telist = cEn_calcExtrapTransferEntropy( ...
 %   tau in the equation above. These may be negative (looking at the future).
 % "numbins" is the number of bins to use for each signal's data when
 %   constructing histograms.
-% "exparams" is a structure containing extrapolation tuning parameters, per
-%   EXTRAPOLATION.txt. This may be empty.
+% "exparams" is an optional structure containing extrapolation tuning
+%   parameters, per EXTRAPOLATION.txt. If this is empty, default parameters
+%   are used. If this is absent, no extrapolation is performed.
 %
 % "telist" is a vector with the same size as "laglist" containing transfer
 %   entropy estimates for each specified time lag.
+
+
+% Metadata.
+want_extrap = exist('exparams', 'var');
 
 
 %
@@ -67,20 +72,29 @@ for lidx = 1:length(laglist)
   datamatrix_yx(3,:) = srcpast;
 
 
-  % NOTE - Palmigiano 2017 took the difference and then extrapolated (I think).
-  % Offer the option of doing the extrapolation and then the subtraction.
-  % These give very similar output in my tests.
+  if want_extrap
+    % NOTE - Palmigiano 2017 took the difference and then extrapolated (I
+    % think).
+    % Offer the option of doing the extrapolation and then the subtraction.
+    % These give very similar output in my tests.
 
-  if false
-    % Subtract and then extrapolate, per Palmigiano 2017.
-    edges = cEn_getMultivariateHistBins( datamatrix_yx, numbins );
-    datafunc = @(funcdata) helper_calcTE( funcdata, edges );
-    thiste = cEn_calcExtrapWrapper( datamatrix_yx, datafunc, exparams );
+    if false
+      % Subtract and then extrapolate, per Palmigiano 2017.
+      % Use a consistent set of edges for histogram binning during
+      % extrapolation.
+      edges = cEn_getMultivariateHistBins( datamatrix_yx, numbins );
+      datafunc = @(funcdata) helper_calcTE( funcdata, edges );
+      thiste = cEn_calcExtrapWrapper( datamatrix_yx, datafunc, exparams );
+    else
+      % Extrapolate and then subtract.
+      thiste = ...
+        cEn_calcConditionalShannon( datamatrix_y, numbins, exparams ) ...
+        - cEn_calcConditionalShannon( datamatrix_yx, numbins, exparams );
+    end
   else
-    % Extrapolate and then subtract.
-    thiste = ...
-      cEn_calcConditionalShannon( datamatrix_y, numbins, exparams ) ...
-      - cEn_calcConditionalShannon( datamatrix_yx, numbins, exparams );
+    % We were not given an extrapolation configuration; don't extrapolate.
+    thiste = cEn_calcConditionalShannon( datamatrix_y, numbins ) ...
+      - cEn_calcConditionalShannon( datamatrix_yx, numbins );
   end
 
   telist(lidx) = thiste;

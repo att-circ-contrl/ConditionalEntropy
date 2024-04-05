@@ -1,7 +1,7 @@
-function telist = cEn_calcFTTransferEntropy( ...
+function telist = cEn_calcTransferEntropyFT_MT( ...
   ftdata, srcchan, dstchan, laglist, numbins, exparams )
 
-% function telist = cEn_calcFTTransferEntropy( ...
+% function telist = cEn_calcTransferEntropyFT_MT( ...
 %   ftdata, srcchan, dstchan, laglist, numbins, exparams )
 %
 % This calculates the transfer entropy from Src to Dst, for a specified set
@@ -9,9 +9,12 @@ function telist = cEn_calcFTTransferEntropy( ...
 %
 % This processes Field Trip input, concatenating trials (after shifting).
 %
+% This calls cEn_calcTransferEntropy_MT(), which tests different lags in
+% parallel with each other. This requires the Parallel Computing Toolbox.
+%
 % NOTE - This needs a large number of samples to generate accurate results!
-% To compensate for smaller sample counts, this uses the extrapolation
-% method described in EXTRAPOLATION.txt (per Palmigiano 2017).
+% To compensate for smaller sample counts, this may optionally use the
+% extrapolation method described in EXTRAPOLATION.txt (per Palmigiano 2017).
 %
 % Transfer entropy from X to Y is defined as:
 %   TEx->y = H[Y|Ypast] - H[Y|Ypast,Xpast]
@@ -32,8 +35,9 @@ function telist = cEn_calcFTTransferEntropy( ...
 %   tau in the equation above. These may be negative (looking at the future).
 % "numbins" is the number of bins to use for each signal's data when
 %   constructing histograms.
-% "exparams" is a structure containing extrapolation tuning parameters, per
-%   EXTRAPOLATION.txt. This may be empty.
+% "exparams" is an optional structure containing extrapolation tuning
+%   parameters, per EXTRAPOLATION.txt. If this is empty, default parameters
+%   are used. If this is absent, no extrapolation is performed.
 %
 % "telist" is a vector with the same size as "laglist" containing transfer
 %   entropy estimates for each specified time lag.
@@ -47,10 +51,17 @@ srcseries = cEn_ftHelperChannelToMatrix(ftdata, srcchan);
 dstseries = cEn_ftHelperChannelToMatrix(ftdata, dstchan);
 
 
-% Wrap the TE function.
+% Wrap the parallel TE function.
 
-telist = cEn_calcExtrapTransferEntropy( ...
-  srcseries, dstseries, laglist, numbins, exparams );
+if exist('exparams', 'var')
+  % We were given an extrapolation configuration.
+  telist = cEn_calcTransferEntropy_MT( ...
+    srcseries, dstseries, laglist, numbins, exparams );
+else
+  % We were not given an extrapolation configuration.
+  telist = cEn_calcTransferEntropy_MT( ...
+    srcseries, dstseries, laglist, numbins );
+end
 
 
 % Done.

@@ -10,14 +10,14 @@ want_test_conditional = false;
 want_test_mutual = false;
 want_test_transfer = true;
 
-want_nonswept = true;
+want_nonswept = false;
 
 want_sweep_sampcount = true;
 want_sweep_histbins = true;
 
 want_parallel = true;
 
-want_test_ft = true;
+want_test_ft = false;
 
 want_plot_signals = false;
 

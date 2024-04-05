@@ -29,7 +29,7 @@ edges = cEn_getMultivariateHistBins( dataseries, numbins );
 % Wrap the binning and mutual information calculation functions.
 datafunc = @(funcdata) helper_calcMutualInfo( funcdata, edges );
 
-if exist('extparams', 'var')
+if exist('exparams', 'var')
   % We were given an extrapolation configuration; perform extrapolation.
   bits = cEn_calcExtrapWrapper( dataseries, datafunc, exparams );
 else

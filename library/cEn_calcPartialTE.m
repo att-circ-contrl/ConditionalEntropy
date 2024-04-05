@@ -1,8 +1,8 @@
 function [ telist1 telist2 ] = cEn_calcPartialTE( ...
-  src1series, src2series, dstseries, laglist, numbins, exparams )
+  src1series, src2series, dstseries, laglist, bins, exparams )
 
 % function [ telist1 telist2 ] = cEn_calcPartialTE( ...
-%   src1series, src2series, dstseries, laglist, numbins, exparams )
+%   src1series, src2series, dstseries, laglist, bins, exparams )
 %
 % This calculates the partial transfer entropy from Src1 to Dst and from
 % Src2 to Dst, for a specified set of time lags.
@@ -39,8 +39,11 @@ function [ telist1 telist2 ] = cEn_calcPartialTE( ...
 %   signal Y.
 % "laglist" is a vector containing sample lags to test. These correspond to
 %   tau in the equation above. These may be negative (looking at the future).
-% "numbins" is the number of bins to use for each signal's data when
-%   constructing histograms.
+% "bins" is a scalar or vector (to generate bins) or a cell array (to supply
+%   bin definitions). If it's a vector of length Nchans or a scalar, it
+%   indicates how many bins to use for each channel's data. If it's a cell
+%   array, bins{chanidx} provides the list of edges used for binning each
+%   channel's data.
 % "exparams" is an optional structure containing extrapolation tuning
 %   parameters, per EXTRAPOLATION.txt. If this is empty, default parameters
 %   are used. If this is absent, no extrapolation is performed.
@@ -102,14 +105,14 @@ for lidx = 1:length(laglist)
 
   if want_extrap
     % We were given an extrapolation configuration.
-    H_ya = cEn_calcConditionalShannon( datamatrix_ya, numbins, exparams );
-    H_yb = cEn_calcConditionalShannon( datamatrix_yb, numbins, exparams );
-    H_yab = cEn_calcConditionalShannon( datamatrix_yab, numbins, exparams );
+    H_ya = cEn_calcConditionalShannon( datamatrix_ya, bins, exparams );
+    H_yb = cEn_calcConditionalShannon( datamatrix_yb, bins, exparams );
+    H_yab = cEn_calcConditionalShannon( datamatrix_yab, bins, exparams );
   else
     % We were not given an extrapolation configuration.
-    H_ya = cEn_calcConditionalShannon( datamatrix_ya, numbins );
-    H_yb = cEn_calcConditionalShannon( datamatrix_yb, numbins );
-    H_yab = cEn_calcConditionalShannon( datamatrix_yab, numbins );
+    H_ya = cEn_calcConditionalShannon( datamatrix_ya, bins );
+    H_yb = cEn_calcConditionalShannon( datamatrix_yb, bins );
+    H_yab = cEn_calcConditionalShannon( datamatrix_yab, bins );
   end
 
   % Output 1 (A) is conditioned on B, and vice versa.

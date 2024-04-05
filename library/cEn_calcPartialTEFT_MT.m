@@ -1,8 +1,8 @@
 function [ telist1 telist2 ] = cEn_calcPartialTEFT_MT( ...
-  ftdata, src1chan, src2chan, dstchan, laglist, numbins, exparams )
+  ftdata, src1chan, src2chan, dstchan, laglist, bins, exparams )
 
 % function [ telist1 telist2 ] = cEn_calcPartialTEFT_MT( ...
-%   ftdata, src1chan, src2chan, dstchan, laglist, numbins, exparams )
+%   ftdata, src1chan, src2chan, dstchan, laglist, bins, exparams )
 %
 % This calculates the partial transfer entropy from Src1 to Dst and from
 % Src2 to Dst, for a specified set of time lags.
@@ -47,8 +47,11 @@ function [ telist1 telist2 ] = cEn_calcPartialTEFT_MT( ...
 %   containing a channel index. This specifies destination signal Y.
 % "laglist" is a vector containing sample lags to test. These correspond to
 %   tau in the equation above. These may be negative (looking at the future).
-% "numbins" is the number of bins to use for each signal's data when
-%   constructing histograms.
+% "bins" is a scalar or vector (to generate bins) or a cell array (to supply
+%   bin definitions). If it's a vector of length Nchans or a scalar, it
+%   indicates how many bins to use for each channel's data. If it's a cell
+%   array, bins{chanidx} provides the list of edges used for binning each
+%   channel's data.
 % "exparams" is an optional structure containing extrapolation tuning
 %   parameters, per EXTRAPOLATION.txt. If this is empty, default parameters
 %   are used. If this is absent, no extrapolation is performed.
@@ -73,11 +76,11 @@ dstseries = cEn_ftHelperChannelToMatrix(ftdata, dstchan);
 if exist('exparams', 'var')
   % We were given an extrapolation configuration.
   [ telist1 telist2 ] = cEn_calcPartialTE_MT( ...
-    src1series, src2series, dstseries, laglist, numbins, exparams );
+    src1series, src2series, dstseries, laglist, bins, exparams );
 else
   % We were not given an extrapolation configuration.
   [ telist1 telist2 ] = cEn_calcPartialTE_MT( ...
-    src1series, src2series, dstseries, laglist, numbins );
+    src1series, src2series, dstseries, laglist, bins );
 end
 
 

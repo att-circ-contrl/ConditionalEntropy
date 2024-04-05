@@ -1,8 +1,8 @@
 function [ telist1 telist2 ] = cEn_calcPartialTE_MT( ...
-  src1series, src2series, dstseries, laglist, numbins, exparams )
+  src1series, src2series, dstseries, laglist, bins, exparams )
 
 % function [ telist1 telist2 ] = cEn_calcPartialTE_MT( ...
-%   src1series, src2series, dstseries, laglist, numbins, exparams )
+%   src1series, src2series, dstseries, laglist, bins, exparams )
 %
 % This is a wrapper for cEn_calcPartialTE() that tests different lags in
 % parallel with each other. This requires the Parallel Computing Toolbox.
@@ -42,8 +42,11 @@ function [ telist1 telist2 ] = cEn_calcPartialTE_MT( ...
 %   signal Y.
 % "laglist" is a vector containing sample lags to test. These correspond to
 %   tau in the equation above. These may be negative (looking at the future).
-% "numbins" is the number of bins to use for each signal's data when
-%   constructing histograms.
+% "bins" is a scalar or vector (to generate bins) or a cell array (to supply
+%   bin definitions). If it's a vector of length Nchans or a scalar, it
+%   indicates how many bins to use for each channel's data. If it's a cell
+%   array, bins{chanidx} provides the list of edges used for binning each
+%   channel's data.
 % "exparams" is an optional structure containing extrapolation tuning
 %   parameters, per EXTRAPOLATION.txt. If this is empty, default parameters
 %   are used. If this is absent, no extrapolation is performed.
@@ -73,11 +76,11 @@ parfor lagidx = 1:length(laglist)
   if want_extrap
     % We were given an extrapolation configuration.
     [ scratch1 scratch2 ] = cEn_calcPartialTE( ...
-      src1series, src2series, dstseries, thislag, numbins, exparams );
+      src1series, src2series, dstseries, thislag, bins, exparams );
   else
     % We were not given an extrapolation configuration.
     [ scratch1 scratch2 ] = cEn_calcPartialTE( ...
-      src1series, src2series, dstseries, thislag, numbins );
+      src1series, src2series, dstseries, thislag, bins );
   end
 
   telist1(lagidx) = scratch1;

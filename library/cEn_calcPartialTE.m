@@ -1,15 +1,15 @@
-function [ telist1 telist2 ] = cEn_calcExtrapPartialTE( ...
+function [ telist1 telist2 ] = cEn_calcPartialTE( ...
   src1series, src2series, dstseries, laglist, numbins, exparams )
 
-% function [ telist1 telist2 ] = cEn_calcExtrapPartialTE( ...
+% function [ telist1 telist2 ] = cEn_calcPartialTE( ...
 %   src1series, src2series, dstseries, laglist, numbins, exparams )
 %
 % This calculates the partial transfer entropy from Src1 to Dst and from
 % Src2 to Dst, for a specified set of time lags.
 %
 % NOTE - This needs a large number of samples to generate accurate results!
-% To compensate for smaller sample counts, this uses the extrapolation
-% method described in EXTRAPOLATION.txt (per Palmigiano 2017).
+% To compensate for smaller sample counts, this may optionally use the
+% extrapolation method described in EXTRAPOLATION.txt (per Palmigiano 2017).
 %
 % Transfer entropy from X to Y is defined as:
 %   TEx->y = H[Y|Ypast] - H[Y|Ypast,Xpast]
@@ -41,13 +41,18 @@ function [ telist1 telist2 ] = cEn_calcExtrapPartialTE( ...
 %   tau in the equation above. These may be negative (looking at the future).
 % "numbins" is the number of bins to use for each signal's data when
 %   constructing histograms.
-% "exparams" is a structure containing extrapolation tuning parameters, per
-%   EXTRAPOLATION.txt. This may be empty.
+% "exparams" is an optional structure containing extrapolation tuning
+%   parameters, per EXTRAPOLATION.txt. If this is empty, default parameters
+%   are used. If this is absent, no extrapolation is performed.
 %
 % "telist1" is a vector with the same size as "laglist" containing transfer
 %   entropy estimates from "src1series" to "dstseries" for each time lag.
 % "telist2" is a vector with the same size as "laglist" containing transfer
 %   entropy estimates from "src2series" to "dstseries" for each time lag.
+
+
+% Metadata.
+want_extrap = exist('exparams', 'var');
 
 
 %
@@ -95,9 +100,17 @@ for lidx = 1:length(laglist)
   % We're doing extrapolation before subtraction. These gave very similar
   % output in my tests, and we'd otherwise have to calculate H_yab twice.
 
-  H_ya = cEn_calcConditionalShannon( datamatrix_ya, numbins, exparams );
-  H_yb = cEn_calcConditionalShannon( datamatrix_yb, numbins, exparams );
-  H_yab = cEn_calcConditionalShannon( datamatrix_yab, numbins, exparams );
+  if want_extrap
+    % We were given an extrapolation configuration.
+    H_ya = cEn_calcConditionalShannon( datamatrix_ya, numbins, exparams );
+    H_yb = cEn_calcConditionalShannon( datamatrix_yb, numbins, exparams );
+    H_yab = cEn_calcConditionalShannon( datamatrix_yab, numbins, exparams );
+  else
+    % We were not given an extrapolation configuration.
+    H_ya = cEn_calcConditionalShannon( datamatrix_ya, numbins );
+    H_yb = cEn_calcConditionalShannon( datamatrix_yb, numbins );
+    H_yab = cEn_calcConditionalShannon( datamatrix_yab, numbins );
+  end
 
   % Output 1 (A) is conditioned on B, and vice versa.
   thiste1 = H_yb - H_yab;

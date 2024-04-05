@@ -1,7 +1,7 @@
-function [ telist1 telist2 ] = cEn_calcFTPartialTE_MT( ...
+function [ telist1 telist2 ] = cEn_calcPartialTEFT_MT( ...
   ftdata, src1chan, src2chan, dstchan, laglist, numbins, exparams )
 
-% function [ telist1 telist2 ] = cEn_calcFTPartialTE_MT( ...
+% function [ telist1 telist2 ] = cEn_calcPartialTEFT_MT( ...
 %   ftdata, src1chan, src2chan, dstchan, laglist, numbins, exparams )
 %
 % This calculates the partial transfer entropy from Src1 to Dst and from
@@ -9,12 +9,12 @@ function [ telist1 telist2 ] = cEn_calcFTPartialTE_MT( ...
 %
 % This processes Field Trip input, concatenating trials (after shifting).
 %
-% This calls cEn_calcExtrapPartialTE_MT(), which tests different lags in
-% parallel with each other. This requires the Parallel Computing Toolbox.
+% This calls cEn_calcPartialTE_MT(), which tests different lags in parallel
+% with each other. This requires the Parallel Computing Toolbox.
 %
 % NOTE - This needs a large number of samples to generate accurate results!
-% To compensate for smaller sample counts, this uses the extrapolation
-% method described in EXTRAPOLATION.txt (per Palmigiano 2017).
+% To compensate for smaller sample counts, this may optionally use the
+% extrapolation method described in EXTRAPOLATION.txt (per Palmigiano 2017).
 %
 % Transfer entropy from X to Y is defined as:
 %   TEx->y = H[Y|Ypast] - H[Y|Ypast,Xpast]
@@ -49,8 +49,9 @@ function [ telist1 telist2 ] = cEn_calcFTPartialTE_MT( ...
 %   tau in the equation above. These may be negative (looking at the future).
 % "numbins" is the number of bins to use for each signal's data when
 %   constructing histograms.
-% "exparams" is a structure containing extrapolation tuning parameters, per
-%   EXTRAPOLATION.txt. This may be empty.
+% "exparams" is an optional structure containing extrapolation tuning
+%   parameters, per EXTRAPOLATION.txt. If this is empty, default parameters
+%   are used. If this is absent, no extrapolation is performed.
 %
 % "telist1" is a vector with the same size as "laglist" containing transfer
 %   entropy estimates from "src1series" to "dstseries" for each time lag.
@@ -69,8 +70,15 @@ dstseries = cEn_ftHelperChannelToMatrix(ftdata, dstchan);
 
 % Wrap the parallel partial TE function.
 
-[ telist1 telist2 ] = cEn_calcExtrapPartialTE_MT( ...
-  src1series, src2series, dstseries, laglist, numbins, exparams );
+if exist('exparams', 'var')
+  % We were given an extrapolation configuration.
+  [ telist1 telist2 ] = cEn_calcPartialTE_MT( ...
+    src1series, src2series, dstseries, laglist, numbins, exparams );
+else
+  % We were not given an extrapolation configuration.
+  [ telist1 telist2 ] = cEn_calcPartialTE_MT( ...
+    src1series, src2series, dstseries, laglist, numbins );
+end
 
 
 % Done.

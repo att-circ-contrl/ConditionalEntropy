@@ -17,7 +17,7 @@ want_sweep_histbins = true;
 
 want_parallel = true;
 
-want_test_ft = false;
+want_test_ft = true;
 
 want_plot_signals = false;
 
@@ -26,7 +26,7 @@ want_plot_signals = false;
 % Geometry.
 
 sampcount = 10000;
-histbins = 32;
+histbins = 16;
 
 te_laglist = [-10:10];
 te_test_lag = 5;

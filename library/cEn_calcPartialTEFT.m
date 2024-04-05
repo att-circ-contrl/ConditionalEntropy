@@ -1,18 +1,17 @@
-function [ telist1 telist2 ] = cEn_calcExtrapPartialTE_MT( ...
-  src1series, src2series, dstseries, laglist, numbins, exparams )
+function [ telist1 telist2 ] = cEn_calcPartialTEFT( ...
+  ftdata, src1chan, src2chan, dstchan, laglist, numbins, exparams )
 
-% function [ telist1 telist2 ] = cEn_calcExtrapPartialTE_MT( ...
-%   src1series, src2series, dstseries, laglist, numbins, exparams )
-%
-% This is a wrapper for cEn_calcExtrapPartialTE() that tests different lags
-% in parallel with each other. This requires the Parallel Computing Toolbox.
+% function [ telist1 telist2 ] = cEn_calcPartialTEFT( ...
+%   ftdata, src1chan, src2chan, dstchan, laglist, numbins, exparams )
 %
 % This calculates the partial transfer entropy from Src1 to Dst and from
 % Src2 to Dst, for a specified set of time lags.
 %
+% This processes Field Trip input, concatenating trials (after shifting).
+%
 % NOTE - This needs a large number of samples to generate accurate results!
-% To compensate for smaller sample counts, this uses the extrapolation
-% method described in EXTRAPOLATION.txt (per Palmigiano 2017).
+% To compensate for smaller sample counts, this may optionally use the
+% extrapolation method described in EXTRAPOLATION.txt (per Palmigiano 2017).
 %
 % Transfer entropy from X to Y is defined as:
 %   TEx->y = H[Y|Ypast] - H[Y|Ypast,Xpast]
@@ -36,16 +35,20 @@ function [ telist1 telist2 ] = cEn_calcExtrapPartialTE_MT( ...
 % Doing that runs into several practical difficulties (memory, time, and
 % needing a prohibitive number of samples to get good statistics).
 %
-% "src1series" is a vector of length Nsamples containing the source signal A.
-% "src2series" is a vector of length Nsamples containing the source signal B.
-% "dstseries" is a vector of length Nsamples containing the destination
-%   signal Y.
+% "ftdata" is a ft_datatype_raw data structure produced by Field Trip.
+% "src1chan" is a character vector containing a channel label, or a scalar
+%   containing a channel index. This specifies source signal A.
+% "src2chan" is a character vector containing a channel label, or a scalar
+%   containing a channel index. This specifies source signal B.
+% "dstchan" is a character vector containing a channel label, or a scalar
+%   containing a channel index. This specifies destination signal Y.
 % "laglist" is a vector containing sample lags to test. These correspond to
 %   tau in the equation above. These may be negative (looking at the future).
 % "numbins" is the number of bins to use for each signal's data when
 %   constructing histograms.
-% "exparams" is a structure containing extrapolation tuning parameters, per
-%   EXTRAPOLATION.txt. This may be empty.
+% "exparams" is an optional structure containing extrapolation tuning
+%   parameters, per EXTRAPOLATION.txt. If this is empty, default parameters
+%   are used. If this is absent, no extrapolation is performed.
 %
 % "telist1" is a vector with the same size as "laglist" containing transfer
 %   entropy estimates from "src1series" to "dstseries" for each time lag.
@@ -53,19 +56,25 @@ function [ telist1 telist2 ] = cEn_calcExtrapPartialTE_MT( ...
 %   entropy estimates from "src2series" to "dstseries" for each time lag.
 
 
-telist1 = nan(size(laglist));
-telist2 = nan(size(laglist));
+% Extract the desired signals.
+% NOTE - This calls the channel bulletproofing function, so we don't need
+% to call it ourselves.
 
-parfor lagidx = 1:length(laglist)
+src1series = cEn_ftHelperChannelToMatrix(ftdata, src1chan);
+src2series = cEn_ftHelperChannelToMatrix(ftdata, src2chan);
+dstseries = cEn_ftHelperChannelToMatrix(ftdata, dstchan);
 
-  thislag = laglist(lagidx);
 
-  [ scratch1 scratch2 ] = cEn_calcExtrapPartialTE( ...
-    src1series, src2series, dstseries, thislag, numbins, exparams );
+% Wrap the partial TE function.
 
-  telist1(lagidx) = scratch1;
-  telist2(lagidx) = scratch2;
-
+if exist('exparams', 'var')
+  % We were given an extrapolation configuration.
+  [ telist1 telist2 ] = cEn_calcPartialTE( ...
+    src1series, src2series, dstseries, laglist, numbins, exparams );
+else
+  % We were not given an extrapolation configuration.
+  [ telist1 telist2 ] = cEn_calcPartialTE( ...
+    src1series, src2series, dstseries, laglist, numbins );
 end
 
 

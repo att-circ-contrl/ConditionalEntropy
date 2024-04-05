@@ -12,7 +12,7 @@ function bits = cEn_calcConditionalShannonHist( bincounts )
 %   H(Y|X) = - sum_j,k[  P(x_j,y_k) * log2( P(x_j,y_k) / P(x_j) )  ]
 %
 % For independent variables, where P(x_j,y_k) = P(x_j) * P(y_k), this
-% reduces to the Shannon entropy H(Y) (since X provided no information
+% reduces to the Shannon entropy H(Y) (since X provides no information
 % about Y).
 %
 % "bincounts" is a matrix with at least 2 dimensions containing histogram

@@ -1,6 +1,6 @@
-function bits = cEn_calcMutualInfo( dataseries, numbins, exparams )
+function bits = cEn_calcMutualInfo( dataseries, bins, exparams )
 
-% function bits = cEn_calcMutualInfo( dataseries, numbins, exparams )
+% function bits = cEn_calcMutualInfo( dataseries, bins, exparams )
 %
 % This calculates the mutual information associated with a set of signals.
 % This is the amount of information shared between the variables, as
@@ -12,8 +12,11 @@ function bits = cEn_calcMutualInfo( dataseries, numbins, exparams )
 % extrapolation method described in EXTRAPOLATION.txt.
 %
 % "dataseries" is a (Nchans,Nsamples) matrix containing several data series.
-% "numbins" is either a vector of length Nchans or a scalar, indicating how
-%   many histogram bins to use for each channel's data.
+% "bins" is a scalar or vector (to generate bins) or a cell array (to supply
+%   bin definitions). If it's a vector of length Nchans or a scalar, it
+%   indicates how many bins to use for each channel's data. If it's a cell
+%   array, bins{chanidx} provides the list of edges used for binning each
+%   channel's data.
 % "exparams" is an optional structure containing extrapolation tuning
 %   parameters, per EXTRAPOLATION.txt. If this is empty, default parameters
 %   are used. If this is absent, no extrapolation is performed.
@@ -23,7 +26,14 @@ function bits = cEn_calcMutualInfo( dataseries, numbins, exparams )
 
 
 % Use consistent bin definitions.
-edges = cEn_getMultivariateHistBins( dataseries, numbins );
+
+if iscell(bins)
+  % We were given edge lists.
+  edges = bins;
+else
+  % We were given one or more bin counts; generate edge lists.
+  edges = cEn_getMultivariateHistBins( dataseries, bins );
+end
 
 
 % Wrap the binning and mutual information calculation functions.

@@ -1,6 +1,6 @@
-function bits = cEn_calcMutualInfoFT( ftdata, chanlist, numbins, exparams )
+function bits = cEn_calcMutualInfoFT( ftdata, chanlist, bins, exparams )
 
-% function bits = cEn_calcMutualInfoFT( ftdata, chanlist, numbins, exparams )
+% function bits = cEn_calcMutualInfoFT( ftdata, chanlist, bins, exparams )
 %
 % This calculates the mutual information associated with a set of signals.
 % This is the amount of information shared between the variables, as
@@ -16,8 +16,11 @@ function bits = cEn_calcMutualInfoFT( ftdata, chanlist, numbins, exparams )
 % "ftdata" is a ft_datatype_raw data structure produced by Field Trip.
 % "chanlist" is a cell array containing channel labels or a vector containing
 %   channel indices. If the list is empty, all channels are used.
-% "numbins" is either a vector of length Nchans or a scalar, indicating how
-%   many histogram bins to use for each channel's data.
+% "bins" is a scalar or vector (to generate bins) or a cell array (to supply
+%   bin definitions). If it's a vector of length Nchans or a scalar, it
+%   indicates how many bins to use for each channel's data. If it's a cell
+%   array, bins{chanidx} provides the list of edges used for binning each
+%   channel's data.
 % "exparams" is an optional structure containing extrapolation tuning
 %   parameters, per EXTRAPOLATION.txt. If this is empty, default parameters
 %   are used. If this is absent, no extrapolation is performed.
@@ -31,9 +34,9 @@ dataseries = cEn_ftHelperConcatTrials( ftdata, chanlist );
 
 % Wrap the non-FT function.
 if exist('exparams', 'var')
-  bits = cEn_calcMutualInfo( dataseries, numbins, exparams );
+  bits = cEn_calcMutualInfo( dataseries, bins, exparams );
 else
-  bits = cEn_calcMutualInfo( dataseries, numbins );
+  bits = cEn_calcMutualInfo( dataseries, bins );
 end
 
 

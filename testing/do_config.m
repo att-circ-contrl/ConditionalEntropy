@@ -6,16 +6,16 @@
 % Switches.
 
 want_test_entropy = false;
-want_test_conditional = false;
-want_test_mutual = false;
-want_test_transfer = true;
+want_test_conditional = true;
+want_test_mutual = true;
+want_test_transfer = false;
 
 want_nonswept = false;
 
 want_sweep_sampcount = true;
 want_sweep_histbins = true;
 
-want_parallel = true;
+want_parallel = false;
 
 want_test_ft = true;
 
@@ -26,7 +26,7 @@ want_plot_signals = false;
 % Geometry.
 
 sampcount = 10000;
-histbins = 16;
+histbins = 32;
 
 te_laglist = [-10:10];
 te_test_lag = 5;

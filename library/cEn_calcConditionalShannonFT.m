@@ -1,8 +1,8 @@
 function bits = ...
-  cEn_calcConditionalShannonFT( ftdata, chanlist, numbins, exparams )
+  cEn_calcConditionalShannonFT( ftdata, chanlist, bins, exparams )
 
 % function bits = ...
-%   cEn_calcConditionalShannonFT( ftdata, chanlist, numbins, exparams )
+%   cEn_calcConditionalShannonFT( ftdata, chanlist, bins, exparams )
 %
 % This calculates the conditional entropy associated with a set of signals.
 % This is the average amount of additional information that a sample from
@@ -19,8 +19,11 @@ function bits = ...
 %   channel indices. If the list is empty, all channels are used. The first
 %   channel in this list is used as the variable Y; remaining channels are
 %   X_k.
-% "numbins" is either a vector of length Nchans or a scalar, indicating how
-%   many histogram bins to use for each channel's data.
+% "bins" is a scalar or vector (to generate histogram bins) or a cell array
+%   (to supply bin edge lists). If it's a vector of length Nchans or a
+%   scalar, it indicates how many bins to use for each channel's data. If
+%   it's a cell array, bins{chanidx} provides the list of edges used for
+%   binning each channel's data.
 % "exparams" is an optional structure containing extrapolation tuning
 %   parameters, per EXTRAPOLATION.txt. If this is empty, default parameters
 %   are used. If this is absent, no extrapolation is performed.
@@ -34,9 +37,9 @@ dataseries = cEn_ftHelperConcatTrials( ftdata, chanlist );
 
 % Wrap the non-FT function.
 if exist('exparams', 'var')
-  bits = cEn_calcConditionalShannon( dataseries, numbins, exparams );
+  bits = cEn_calcConditionalShannon( dataseries, bins, exparams );
 else
-  bits = cEn_calcConditionalShannon( dataseries, numbins );
+  bits = cEn_calcConditionalShannon( dataseries, bins );
 end
 
 

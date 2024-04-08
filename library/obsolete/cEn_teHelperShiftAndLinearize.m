@@ -1,36 +1,33 @@
-function [ dstpresent dstpast srcpast ] = ...
-  cEn_teHelperShiftAndLinearize( dstseries, srcseries, timelag, laglist )
+function [ dstpresent dstpast src1past src2past ] = ...
+  cEn_teHelperShiftAndLinearize( dstseries, src1series, src2series, ...
+    timelag, laglist )
 
-% function [ dstpresent dstpast srcpast ] = ...
-%   cEn_teHelperShiftAndLinearize( dstseries, srcseries, timelag, laglist )
+% function [ dstpresent dstpast src1past src2past ] = ...
+%   cEn_teHelperShiftAndLinearize( dstseries, src1series, src2series, ...
+%     timelag, laglist )
 %
 % This produces cropped time-shfited series used for transfer entropy and
-% partial transfer entropy calculations. Trials are concatenated after
-% shifting and cropping.
+% partial transfer entropy calculations.
 %
-% NOTE - Instead of shifting the "past" signals left, the "present" signal
+% NOTE - Instead of shfiting the "past" signals left, the "present" signal
 % is shifted right (for positive time lags; reverse for negative).
 %
 % "dstseries" is a vector of length Nsamples or a Ntrials x Nsamples matrix
 %   containing the destination signal Y.
-% "srcseries" is a cell array of length Nsrcs containing source signals X_k.
-%   These are either vectors of length Nsamples or matrices of size
-%   Ntrials x Nsamples.
+% "src1series" is a vector of length Nsamples or a Ntrials x Nsamples matrix
+%   containing the source signal X1.
+% "src2series" is a vector of length Nsamples or a Ntrials x Nsamples matrix
+%   containing the source signal X2.
 % "timelag" is the time lag to test, in samples.
-% "laglist" is a vector containing all tested time lags (to get lag range).
+% "laglist" is a vector containing all tested time lags.
 %
-% "dstpresent" is a 1xNoutsamps vector containing concatenated cropped
-%   time-shifted trials from dstseries.
-% "dstpast" is a 1xNoutsamps vector containing concatenated cropped trials
-%   from dstseries.
-% "srcpast" is a cell array of length Nsrcs containing 1xNoutsamps vectors
-%   that are concatenated cropped trials from srcseries.
-
-
-% Get metadata.
-
-srccount = length(srcseries);
-
+% "dstpresent" is a vector containing concatenated cropped time-shifted
+%   trials from dstseries.
+% "dstpast" is a vector containing concatenated cropped trials from dstseries.
+% "src1past" is a vector containing concatenated cropped trials from
+%   src1series.
+% "src2past" is a vector containing concatenated cropped trials from
+%   src2series.
 
 
 % If we were given vectors rather than matrices, make sure they're
@@ -40,11 +37,12 @@ if iscolumn(dstseries)
   dstseries = transpose(dstseries);
 end
 
-for sidx = 1:srccount
-  thissrc = srcseries{sidx};
-  if iscolumn(thissrc)
-    srcseries{sidx} = transpose(thissrc);
-  end
+if iscolumn(src1series)
+  src1series = transpose(src1series);
+end
+
+if iscolumn(src2series)
+  src1series = transpose(src2series);
 end
 
 
@@ -52,10 +50,8 @@ end
 % Get the cropping range.
 
 % NOTE - These really should be the same length, but bulletproof just in case.
-nsamples = size(dstseries,2);
-for sidx = 1:srccount
-  nsamples = min([ nsamples, size(srcseries{sidx},2) ]);
-end
+nsamples = ...
+  min( [ size(dstseries,2), size(src1series,2), size(src2series,2) ] );
 
 % Zero or negative.
 minlag = min(laglist);
@@ -71,32 +67,29 @@ lastsamp = nsamples + minlag;
 % FIXME - Not checking for lag larger than input size!
 
 
-
 % Shift, crop, and concatenate.
 
 % Instead of shifting the "past" versions left, shift "present" right.
 
 dstpresent = circshift(dstseries, timelag, 2);
 dstpast = dstseries;
-srcpast = srcseries;
+src1past = src1series;
+src2past = src2series;
 
 % Crop to avoid wrapped portions.
 
 dstpresent = dstpresent(:,firstsamp:lastsamp);
 dstpast = dstpast(:,firstsamp:lastsamp);
-for sidx = 1:srccount
-  thissrc = srcpast{sidx};
-  srcpast{sidx} = thissrc(:,firstsamp:lastsamp);
-end
+src1past = src1past(:,firstsamp:lastsamp);
+src2past = src2past(:,firstsamp:lastsamp);
 
 % Turn these into linear arrays.
 % NOTE - Using a helper rather than "reshape", to guarantee consistent order.
 
 dstpresent = helper_makeLinear(dstpresent);
 dstpast = helper_makeLinear(dstpast);
-for sidx = 1:srccount
-  srcpast{sidx} = helper_makeLinear( srcpast{sidx} );
-end
+src1past = helper_makeLinear(src1past);
+src2past = helper_makeLinear(src2past);
 
 
 

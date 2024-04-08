@@ -15,7 +15,7 @@ want_nonswept = false;
 want_sweep_sampcount = true;
 want_sweep_histbins = true;
 
-want_parallel = true;
+want_parallel = false;
 
 want_test_ft = false;
 

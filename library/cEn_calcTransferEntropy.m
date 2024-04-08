@@ -1,11 +1,12 @@
-function telist = cEn_calcTransferEntropy( ...
-  srcseries, dstseries, laglist, bins, exparams )
+function telist = ...
+  cEn_calcTransferEntropy( dataseries, laglist, bins, exparams )
 
-% function telist = cEn_calcTransferEntropy( ...
-%   srcseries, dstseries, laglist, bins, exparams )
+% function telist = ...
+%   cEn_calcTransferEntropy( dataseries, laglist, bins, exparams )
 %
-% This calculates the transfer entropy from Src to Dst, for a specified set
-% of time lags.
+% This calculates the partial transfer entropy from signals X_1..X_k to
+% signal Y, for a specified set of time lags. If there is only one X, this
+% is the transfer entropy from X to Y.
 %
 % NOTE - This needs a large number of samples to generate accurate results!
 % To compensate for smaller sample counts, this may optionally use the
@@ -16,15 +17,26 @@ function telist = cEn_calcTransferEntropy( ...
 % This is the amount of additional information gained about the future of Y
 % by knowing the past of X, vs just knowing the past of Y.
 %
+% Partial transfer entropy from A to Y in the presence of B is defined as:
+%   pTEa->y = H[Y|Ypast,Bpast] - H[Y|Ypast,Bpast,Apast]
+% This is the amount of additional information gained about the future of Y
+% by knowing the past of A, vs just knowing the past of Y and B.
+%
 % This is prohibitively expensive to compute, so a proxy is usually used
 % that considers a sample at some distance in the past as a proxy for the
 % entire past history:
 %   TEx->y(tau) = H[Y(t)|Y(t-tau)] - H[Y(t)|Y(t-tau),X(t-tau)]
 %
-% "srcseries" is a vector of length Nsamples or a Ntrials x Nsamples matrix
-%   containing the source signal X.
-% "dstseries" is a vector of length Nsamples or a Ntrials x Nsamples matrix
-%   containing the destination signal Y.
+% A similar proxy is used for computing partial transfer entropy.
+%
+% NOTE - For k source signals, this involves evaluating a (k+2) dimensional
+% histogram. This gets very big very quickly, and also needs a very large
+% number of samples to get good statistics.
+%
+% "dataseries" is a cell array of length Nchans containing data series.
+%   The first series (chan = 1) is the variable Y; remaining series are X_k.
+%   Each series is a either a vector of length Nsamples or a matrix of
+%   size Ntrials x Nsamples.
 % "laglist" is a vector containing sample lags to test. These correspond to
 %   tau in the equation above. These may be negative (looking at the future).
 % "bins" is a scalar or vector (to generate bins) or a cell array (to supply
@@ -36,100 +48,119 @@ function telist = cEn_calcTransferEntropy( ...
 %   parameters, per EXTRAPOLATION.txt. If this is empty, default parameters
 %   are used. If this is absent, no extrapolation is performed.
 %
-% "telist" is a vector with the same size as "laglist" containing transfer
-%   entropy estimates for each specified time lag.
+% "telist" is a (Nchans-1,Nlags) matrix containing transfer entropy
+%   estimates from X_k (dataseries{k+1}) to Y (dataseries{1}) for each
+%   time lag.
 
 
 % Metadata.
+
 want_extrap = exist('exparams', 'var');
+
+xcount = length(dataseries) - 1;
+lagcount = length(laglist);
+
+
+% Unpack source and destination series.
+
+dstseries = dataseries{1};
+srcseries = dataseries(2:(xcount+1));
+
+% This works with cell and numeric bin definitions.
+dstbins = bins(1);
+if length(bins) > 1
+  % We were given several bin definitions.
+  dstbins = bins(1);
+  srcbins = bins(2:length(bins));
+else
+  % We were only given one bin definition.
+  % Expand it.
+  dstbins = bins;
+  srcbins(1:xcount) = bins;
+end
+
 
 
 %
-% Walk through the lag list, building TE estimates.
+% Walk through the lag list, building partial TE estimates.
 
-telist = nan(size(laglist));
+telist = nan([ xcount, lagcount ]);
 
-for lidx = 1:length(laglist)
+for lidx = 1:lagcount
 
   thislag = laglist(lidx);
 
   % Shift, crop, and concatenate the data trials.
-  % Supply the source sequence twice, since the helper expects two sources.
-  [ dstpresent dstpast srcpast scratch ] = ...
-    cEn_teHelperShiftAndLinearize( dstseries, srcseries, srcseries, ...
-      thislag, laglist );
+  [ dstpresent dstpast srcpast ] = ...
+    cEn_teHelperShiftAndLinearize( dstseries, srcseries, thislag, laglist );
 
-
-  % Assemble the conditional entropy data series.
-
+  % The helper function made lengths consistent.
   serieslength = length(dstpresent);
 
-  datamatrix_y = zeros([ 2, serieslength ]);
-  datamatrix_yx = zeros([ 3, serieslength ]);
 
-  datamatrix_y(1,:) = dstpresent;
-  datamatrix_y(2,:) = dstpast;
-
-  datamatrix_yx(1,:) = dstpresent;
-  datamatrix_yx(2,:) = dstpast;
-  datamatrix_yx(3,:) = srcpast;
+  % NOTE - Palmigiano 2017 took the difference and then extrapolated (I think).
+  % We're doing extrapolation before subtraction. These gave very similar
+  % output in my tests, and we'd otherwise have to calculate H_allpast
+  % repeatedly (once for each source signal).
 
 
-  if want_extrap
-    % NOTE - Palmigiano 2017 took the difference and then extrapolated (I
-    % think).
-    % Offer the option of doing the extrapolation and then the subtraction.
-    % These give very similar output in my tests.
+  % We need the "conditioned on everything" conditional entropy for all
+  % calculations, and it's the most expensive thing to compute.
+  % So, compute it only once, before iterating sources.
 
-    if false
-      % Subtract and then extrapolate, per Palmigiano 2017.
-
-      % Use a consistent set of edges for histogram binning during
-      % extrapolation.
-      if iscell(bins)
-        % We were given edge lists.
-        edges = bins;
-      else
-        % We were given one or more bin counts; generate edge lists.
-        edges = cEn_getMultivariateHistBins( datamatrix_yx, bins );
-      end
-
-      datafunc = @(funcdata) helper_calcTE( funcdata, edges );
-      thiste = cEn_calcExtrapWrapper( datamatrix_yx, datafunc, exparams );
-    else
-      % Extrapolate and then subtract.
-      thiste = ...
-        cEn_calcConditionalShannon( datamatrix_y, bins, exparams ) ...
-        - cEn_calcConditionalShannon( datamatrix_yx, bins, exparams );
-    end
-  else
-    % We were not given an extrapolation configuration; don't extrapolate.
-    thiste = cEn_calcConditionalShannon( datamatrix_y, bins ) ...
-      - cEn_calcConditionalShannon( datamatrix_yx, bins );
+  datamatrix_allpast = [ dstpresent ; dstpast ];
+  for xidx = 1:xcount
+    datamatrix_allpast = [ datamatrix_allpast ; srcpast{xidx} ];
   end
 
-  telist(lidx) = thiste;
+  if want_extrap
+    % We were given an extrapolation configuration.
+    H_allpast = ...
+      cEn_calcConditionalShannon( datamatrix_allpast, bins, exparams );
+  else
+    % We were not given an extrapolation configuration.
+    H_allpast = ...
+      cEn_calcConditionalShannon( datamatrix_allpast, bins );
+  end
+
+
+  % Walk through choices of primary source series.
+
+  for srcidx = 1:xcount
+
+    % Condition on everything _except_ this source.
+
+    datamatrix_somepast = [ dstpresent ; dstpast ];
+    for xidx = 1:xcount
+      if xidx ~= srcidx
+        datamatrix_somepast = [ datamatrix_somepast ; srcpast{xidx} ];
+      end
+    end
+
+
+    % Calculate conditional entropy.
+
+    if want_extrap
+      % We were given an extrapolation configuration.
+      H_somepast = ...
+        cEn_calcConditionalShannon( datamatrix_somepast, bins, exparams );
+    else
+      % We were not given an extrapolation configuration.
+      H_somepast = ...
+        cEn_calcConditionalShannon( datamatrix_somepast, bins );
+    end
+
+
+    % Compute and store this transfer entropy value.
+
+    telist(srcidx,lidx) = H_somepast - H_allpast;
+
+  end
 
 end
 
 
 % Done.
-end
-
-
-%
-% Helper Functions
-
-function thiste = helper_calcTE( data_yx, edges_yx )
-
-  data_y = data_yx(1:2,:);
-  edges_y = edges_yx(1:2);
-
-  [ binned_y scratch ] = cEn_getBinnedMultivariate( data_y, edges_y );
-  [ binned_yx scratch ] = cEn_getBinnedMultivariate( data_yx, edges_yx );
-
-  thiste = cEn_calcConditionalShannonHist( binned_y ) ...
-    - cEn_calcConditionalShannonHist( binned_yx );
 end
 
 

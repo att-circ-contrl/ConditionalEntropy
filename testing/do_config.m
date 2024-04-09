@@ -8,7 +8,8 @@
 want_test_entropy = false;
 want_test_conditional = false;
 want_test_mutual = false;
-want_test_transfer = true;
+want_test_mutual_lagged = true;
+want_test_transfer = false;
 
 want_nonswept = false;
 
@@ -47,8 +48,8 @@ ft_trials = 10;
 %
 % Test signal parameters.
 
-signal_type = 'noise';
-%signal_type = 'sine';
+%signal_type = 'noise';
+signal_type = 'sine';
 
 
 %

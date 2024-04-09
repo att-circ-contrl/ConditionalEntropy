@@ -587,6 +587,11 @@ if want_sweep_sampcount
   mutualraw = nan([ sampsweepsize, binsweepsize, datasize_mutual ]);
   mutualext = mutualraw;
 
+  % Using the 2-channel transfer entropy test cases for lagged MI.
+  lagmutualraw = ...
+    nan([ lagcount, sampsweepsize, binsweepsize, datasize_te_2ch ]);
+  lagmutualext = lagmutualraw;
+
   te2chraw = nan([ lagcount, sampsweepsize, binsweepsize, datasize_te_2ch ]);
   te2chext = te2chraw;
 
@@ -726,6 +731,63 @@ if want_sweep_sampcount
       durstring = helper_makePrettyTime(toc);
       disp([ ' -- Mutual information for ' prettysamps ' samples took ' ...
         durstring '.' ]);
+    end
+
+
+    % Time-lagged mutual information.
+
+    if want_test_mutual_lagged
+      % Using the 2-channel transfer entropy test cases for lagged MI.
+      [ thisdatasetlist_2ch thisdatasetlist_3ch ] = ...
+        helper_makeDatasetsTransfer( ...
+          thissampcount, te_test_lag, signal_type );
+      [ thisdatasetlist_2ch_ft thisdatasetlist_3ch_ft ] = ...
+        helper_makeDatasetsTransfer_FT( ...
+          thisftsamps, ft_trials, te_test_lag, signal_type );
+      thisdatasetlist = thisdatasetlist_2ch;
+      thisdatasetlist_ft = thisdatasetlist_2ch_ft;
+
+      tic;
+
+      dstidx = 1;
+      srcidx = 2;
+
+      for didx = 1:length(thisdatasetlist)
+        if want_test_ft
+          thisdata = thisdatasetlist_ft{didx,1};
+
+          for bidx = 1:binsweepsize
+            milist_raw = cEn_calcLaggedMutualInfoFT( ...
+              thisdata, [ dstidx srcidx ], ...
+              te_laglist, swept_histbins(bidx) );
+            milist_ext = cEn_calcLaggedMutualInfoFT( ...
+              thisdata, [ dstidx srcidx ], ...
+              te_laglist, swept_histbins(bidx), struct() );
+
+            lagmutualraw( :, sidx, bidx, didx ) = milist_raw;
+            lagmutualext( :, sidx, bidx, didx ) = milist_ext;
+          end
+        else
+          thisdata = thisdatasetlist{didx,1};
+          dstseries = thisdata(dstidx,:);
+          srcseries = thisdata(srcidx,:);
+
+          for bidx = 1:binsweepsize
+            milist_raw = cEn_calcLaggedMutualInfo( ...
+              { dstseries, srcseries }, te_laglist, swept_histbins(bidx) );
+            milist_ext = cEn_calcLaggedMutualInfo( ...
+              { dstseries, srcseries }, te_laglist, swept_histbins(bidx), ...
+              struct() );
+
+            lagmutualraw( :, sidx, bidx, didx ) = milist_raw;
+            lagmutualext( :, sidx, bidx, didx ) = milist_ext;
+          end
+        end
+      end
+
+      durstring = helper_makePrettyTime(toc);
+      disp([ ' -- Time-lagged mutual information for ' prettysamps ...
+        ' samples took ' durstring '.' ]);
     end
 
 
@@ -943,6 +1005,24 @@ if want_sweep_sampcount
     helper_plotSweptData( mutualext, swept_sampcounts, swept_histbins, ...
       datalabels_mutual, datatitles_mutual, 'Mutual Information (bits)', ...
       'Mutual Information (extrap)', [ plotdir filesep 'mutual-ext' ] );
+  end
+
+  if want_test_mutual_lagged
+
+    % Using the 2-channel transfer entropy test cases for lagged MI.
+
+    helper_plotTESweptData( lagmutualraw, ...
+      te_laglist, te_test_lag, swept_sampcounts, swept_histbins, ...
+      datalabels_te_2ch, datatitles_te_2ch, 'Mutual Information (bits)', ...
+      'Lagged Mutual Information (raw)', ...
+      [ plotdir filesep 'lagmutual-raw' ] );
+
+    helper_plotTESweptData( lagmutualext, ...
+      te_laglist, te_test_lag, swept_sampcounts, swept_histbins, ...
+      datalabels_te_2ch, datatitles_te_2ch, 'Mutual Information (bits)', ...
+      'Lagged Mutual Information (extrap)', ...
+      [ plotdir filesep 'lagmutual-ext' ] );
+
   end
 
   if want_test_transfer

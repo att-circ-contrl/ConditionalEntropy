@@ -1,8 +1,8 @@
 function milist = ...
-  cEn_calcLaggedMutualInfo( dataseries, laglist, bins, exparams)
+  cEn_calcLaggedMutualInfoFT_MT( ftdata, chanlist, laglist, bins, exparams)
 
 % function milist = ...
-%   cEn_calcLaggedMutualInfo( dataseries, laglist, bins, exparams)
+%   cEn_calcLaggedMutualInfoFT_MT( ftdata, chanlist, laglist, bins, exparams)
 %
 % This calculates the mutual information between a destination signal and
 % time-lagged source signals. This is the amount of information shared
@@ -12,14 +12,21 @@ function milist = ...
 % This is less informative than transfer entropy but can be faster to
 % calculate.
 %
+% This processes Field Trip input, concatenating trials (after shifting).
+%
+% This tests different lags in parallel with each other. This requires the
+% Parallel Computing Toolbox.
+%
 % This needs a large number of samples to generate accurate results. To
 % compensate for samller sample counts, this may optionally use the
 % extrapolation method described in EXTRAPOLATION.txt.
 %
-% "dataseries" is a cell array of length Nchans containing data series. The
-%   first series (chan = 1) is the destination signal; remaining series are
-%   source signals. Each series is either a vector of length Nsamples or a
-%   matrix of size Ntrials x Nsamples.
+% "ftdata" is a ft_datatype_raw structure produced by Field Trip.
+% "chanlist" is a vector or cell array of length Nchans specifying which
+%   channels to process. If this is a cell array, it contains Field Trip
+%   channel labels. If this is a vector, it contains channel indices. The
+%   first channel (element 1) is the destination signal; remaining channels
+%   are source signals.
 % "laglist" is a vector containing sample time lags to test. These are
 %   applied to the "source" signals. These may be negative (future times).
 % "bins" is a scalar or vector (to generate bins) or a cell array (to supply
@@ -39,42 +46,25 @@ function milist = ...
 
 want_extrap = exist('exparams', 'var');
 
-xcount = length(dataseries) - 1;
-lagcount = length(laglist);
 
-% Unpack source and destination series.
-dstseries = dataseries{1};
-srcseries = dataseries(2:(xcount+1));
+% Convert Field Trip data into matrices.
 
-
-
-%
-% Walk through the lag list, building mutual information estimates.
-
-milist = nan(size(laglist));
-
-for lidx = 1:lagcount
-
-  thislag = laglist(lidx);
-
-  % Shift, crop, and concatenate the data trials.
-  [ dstpresent dstpast srcpast ] = ...
-    cEn_teHelperShiftAndLinearize( dstseries, srcseries, thislag, laglist );
-
-  % We don't care about "dstpast".
-  datamatrix = dstpresent;
-  for xidx = 1:xcount
-    datamatrix = [ datamatrix ; srcpast{xidx} ];
+dataseries = {};
+for cidx = 1:length(chanlist)
+  thischan = chanlist(cidx);
+  if iscell(thischan)
+    thischan = thischan{1};
   end
 
-  if want_extrap
-    % We were given an extrapolation configuration.
-    milist(lidx) = cEn_calcMutualInfo( datamatrix, bins, exparams );
-  else
-    % We were not given an extrapolation configuration.
-    milist(lidx) = cEn_calcMutualInfo( datamatrix, bins );
-  end
+  dataseries{cidx} = cEn_ftHelperChannelToMatrix( ftdata, thischan );
+end
 
+if want_extrap
+  % We were given an extrapolation configuration.
+  milist = cEn_calcLaggedMutualInfo_MT( dataseries, laglist, bins, exparams );
+else
+  % We were not given an extrapolation configuration.
+  milist = cEn_calcLaggedMutualInfo_MT( dataseries, laglist, bins );
 end
 
 

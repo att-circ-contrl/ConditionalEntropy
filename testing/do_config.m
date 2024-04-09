@@ -16,9 +16,9 @@ want_nonswept = false;
 want_sweep_sampcount = true;
 want_sweep_histbins = true;
 
-want_parallel = false;
+want_parallel = true;
 
-want_test_ft = false;
+want_test_ft = true;
 
 want_plot_signals = false;
 
@@ -48,8 +48,8 @@ ft_trials = 10;
 %
 % Test signal parameters.
 
-%signal_type = 'noise';
-signal_type = 'sine';
+signal_type = 'noise';
+%signal_type = 'sine';
 
 
 %

@@ -1,8 +1,8 @@
 function milist = ...
-  cEn_calcLaggedMutualInfo( dataseries, laglist, bins, exparams)
+  cEn_calcLaggedMutualInfo_MT( dataseries, laglist, bins, exparams)
 
 % function milist = ...
-%   cEn_calcLaggedMutualInfo( dataseries, laglist, bins, exparams)
+%   cEn_calcLaggedMutualInfo_MT( dataseries, laglist, bins, exparams)
 %
 % This calculates the mutual information between a destination signal and
 % time-lagged source signals. This is the amount of information shared
@@ -11,6 +11,9 @@ function milist = ...
 %
 % This is less informative than transfer entropy but can be faster to
 % calculate.
+%
+% This tests different lags in parallel with each other. This requires the
+% Parallel Computing Toolbox.
 %
 % This needs a large number of samples to generate accurate results. To
 % compensate for samller sample counts, this may optionally use the
@@ -39,40 +42,30 @@ function milist = ...
 
 want_extrap = exist('exparams', 'var');
 
-xcount = length(dataseries) - 1;
+% Parfor wants this to exist even if we don't use it.
+if ~want_extrap
+  exparams = struct();
+end
+
 lagcount = length(laglist);
 
-% Unpack source and destination series.
-dstseries = dataseries{1};
-srcseries = dataseries(2:(xcount+1));
 
-
-
-%
-% Walk through the lag list, building mutual information estimates.
+% Iterate in parallel.
 
 milist = nan(size(laglist));
 
-for lidx = 1:lagcount
+parfor lidx = 1:lagcount
 
   thislag = laglist(lidx);
 
-  % Shift, crop, and concatenate the data trials.
-  [ dstpresent dstpast srcpast ] = ...
-    cEn_teHelperShiftAndLinearize( dstseries, srcseries, thislag, laglist );
-
-  % We don't care about "dstpast".
-  datamatrix = dstpresent;
-  for xidx = 1:xcount
-    datamatrix = [ datamatrix ; srcpast{xidx} ];
-  end
-
   if want_extrap
     % We were given an extrapolation configuration.
-    milist(lidx) = cEn_calcMutualInfo( datamatrix, bins, exparams );
+    milist(lidx) = ...
+      cEn_calcLaggedMutualInfo( dataseries, thislag, bins, exparams );
   else
     % We were not given an extrapolation configuration.
-    milist(lidx) = cEn_calcMutualInfo( datamatrix, bins );
+    milist(lidx) = ...
+      cEn_calcLaggedMutualInfo( dataseries, thislag, bins );
   end
 
 end

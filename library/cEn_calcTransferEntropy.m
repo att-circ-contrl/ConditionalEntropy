@@ -66,8 +66,10 @@ lagcount = length(laglist);
 dstseries = dataseries{1};
 srcseries = dataseries(2:(xcount+1));
 
+
+% Get bin definitions.
 % This works with cell and numeric bin definitions.
-dstbins = bins(1);
+
 if length(bins) > 1
   % We were given several bin definitions.
   dstbins = bins(1);
@@ -94,9 +96,6 @@ for lidx = 1:lagcount
   [ dstpresent dstpast srcpast ] = ...
     cEn_teHelperShiftAndLinearize( dstseries, srcseries, thislag, laglist );
 
-  % The helper function made lengths consistent.
-  serieslength = length(dstpresent);
-
 
   % NOTE - Palmigiano 2017 took the difference and then extrapolated (I think).
   % We're doing extrapolation before subtraction. These gave very similar
@@ -109,18 +108,20 @@ for lidx = 1:lagcount
   % So, compute it only once, before iterating sources.
 
   datamatrix_allpast = [ dstpresent ; dstpast ];
+  bins_allpast = [ dstbins dstbins ];
   for xidx = 1:xcount
     datamatrix_allpast = [ datamatrix_allpast ; srcpast{xidx} ];
+    bins_allpast = [ bins_allpast srcbins(xidx) ];
   end
 
   if want_extrap
     % We were given an extrapolation configuration.
     H_allpast = ...
-      cEn_calcConditionalShannon( datamatrix_allpast, bins, exparams );
+      cEn_calcConditionalShannon( datamatrix_allpast, bins_allpast, exparams );
   else
     % We were not given an extrapolation configuration.
     H_allpast = ...
-      cEn_calcConditionalShannon( datamatrix_allpast, bins );
+      cEn_calcConditionalShannon( datamatrix_allpast, bins_allpast );
   end
 
 
@@ -131,9 +132,11 @@ for lidx = 1:lagcount
     % Condition on everything _except_ this source.
 
     datamatrix_somepast = [ dstpresent ; dstpast ];
+    bins_somepast = [ dstbins dstbins ];
     for xidx = 1:xcount
       if xidx ~= srcidx
         datamatrix_somepast = [ datamatrix_somepast ; srcpast{xidx} ];
+        bins_somepast = [ bins_somepast srcbins(xidx) ];
       end
     end
 
@@ -142,12 +145,12 @@ for lidx = 1:lagcount
 
     if want_extrap
       % We were given an extrapolation configuration.
-      H_somepast = ...
-        cEn_calcConditionalShannon( datamatrix_somepast, bins, exparams );
+      H_somepast = cEn_calcConditionalShannon( ...
+        datamatrix_somepast, bins_somepast, exparams );
     else
       % We were not given an extrapolation configuration.
       H_somepast = ...
-        cEn_calcConditionalShannon( datamatrix_somepast, bins );
+        cEn_calcConditionalShannon( datamatrix_somepast, bins_somepast );
     end
 
 

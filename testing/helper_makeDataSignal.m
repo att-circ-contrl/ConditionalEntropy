@@ -3,10 +3,11 @@ function dataseries = helper_makeDataSignal( sampcount, signaltype )
 % function dataseries = helper_makeDataSignal( sampcount, signaltype )
 %
 % This builds a random data signal of the specified length.
-% All sample values are in the range 0..1.
+% For 'noise' and 'sine', all sample values are in the range 0..1.
+% For 'counts', all sample values are non-negative integers.
 %
 % "sampcount" is the number of samples to generate.
-% "signaltype" is 'noise' or 'sine'.
+% "signaltype" is 'noise', 'sine', or 'counts'.
 %
 % "dataseries" is a 1xNsamps vector containing signal samples.
 
@@ -45,6 +46,13 @@ elseif strcmp(signaltype, 'sine')
     + 0.2 * sin( f2 * timeseries + p2 );
 
   dataseries = 0.5 * dataseries + 0.5;
+
+elseif strcmp(signaltype, 'counts')
+
+  % Poisson random values, with a rate parameter drawn from a uniform
+  % random range.
+  lambda = rand() + 0.5;
+  dataseries = poissrnd( lambda, [ 1 sampcount ] );
 
 else
 

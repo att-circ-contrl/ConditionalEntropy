@@ -14,7 +14,7 @@ function [ datasets_2ch datasets_3ch ] = ...
 % "sampcount" is the desired number of samples per series.
 % "samp_shift" is the number of samples by which data series should be
 %   shifted forward or backward in time, for time-lagged signals.
-% "signaltype" is 'noise' or 'sine'.
+% "signaltype" is 'noise', 'sine', or 'counts'.
 %
 % "datasets_2ch" is a Nx3 cell array. Element {k,1} is a 2 x Nsamples matrix
 %   containing data samples, element {k,2} is a short plot- and
@@ -24,6 +24,10 @@ function [ datasets_2ch datasets_3ch ] = ...
 %   containing data samples, element {k,2} is a short plot- and
 %   filename-safe label, and element {k,3} is a plot-safe verbose label for
 %   data series k.
+
+
+% Make note of whether we're continuous or discrete.
+isdiscrete = strcmp(signaltype, 'counts');
 
 
 % Make several uncorrelated noise series. One of them's our "signal".
@@ -36,13 +40,21 @@ data_te_noise2 = helper_makeDataSignal(sampcount, signaltype);
 
 % Explicitly smear the data signal by one sample.
 
-data_te_data = 0.5 * ( data_te_data + circshift( data_te_data, 1) );
+if ~isdiscrete
+  data_te_data = 0.5 * ( data_te_data + circshift( data_te_data, 1) );
+end
 
 
 % Get signal-plus-noise series.
 
-data_te_withnoise1 = 0.5 * (data_te_data + data_te_noise1);
-data_te_withnoise2 = 0.5 * (data_te_data + data_te_noise2);
+data_te_withnoise1 = data_te_data + data_te_noise1;
+data_te_withnoise2 = data_te_data + data_te_noise2;
+
+if ~isdiscrete
+  % Normalize back to 0..1.
+  data_te_withnoise1 = 0.5 * data_te_withnoise1;
+  data_te_withnoise2 = 0.5 * data_te_withnoise2;
+end
 
 
 %

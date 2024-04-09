@@ -10,7 +10,7 @@ function datasets = helper_makeDatasetsMutual( sampcount, signaltype )
 % series (for conditional entropy) and data(k,:) are the independent series.
 %
 % "sampcount" is the desired number of samples per series.
-% "signaltype" is 'noise' or 'sine'.
+% "signaltype" is 'noise', 'sine', or 'counts'.
 %
 % "datasets" is a Nx3 cell array. Element {k,1} is a Nchans x Nsamples
 %   matrix containing data samples, element {k,2} is a short plot- and
@@ -28,8 +28,14 @@ data_noise2 = helper_makeDataSignal(sampcount, signaltype);
 
 % Get signal-plus-noise series.
 
-data_noisysignal1 = 0.5 * (data_signal + data_noise1);
-data_noisysignal2 = 0.5 * (data_signal + data_noise2);
+data_noisysignal1 = data_signal + data_noise1;
+data_noisysignal2 = data_signal + data_noise2;
+
+if ~strcmp(signaltype, 'counts')
+  % Continuous data, so normalize it back to 0..1.
+  data_noisysignal1 = 0.5 * data_noisysignal1;
+  data_noisysignal2 = 0.5 * data_noisysignal2;
+end
 
 
 % Build test cases.

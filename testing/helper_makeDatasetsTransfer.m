@@ -47,13 +47,16 @@ end
 
 % Get signal-plus-noise series.
 
-data_te_withnoise1 = data_te_data + data_te_noise1;
-data_te_withnoise2 = data_te_data + data_te_noise2;
+noiseweight = 1;
+%noiseweight = 3;
+
+data_te_withnoise1 = data_te_data + noiseweight * data_te_noise1;
+data_te_withnoise2 = data_te_data + noiseweight * data_te_noise2;
 
 if ~isdiscrete
   % Normalize back to 0..1.
-  data_te_withnoise1 = 0.5 * data_te_withnoise1;
-  data_te_withnoise2 = 0.5 * data_te_withnoise2;
+  data_te_withnoise1 = data_te_withnoise1 / (1 + noiseweight);
+  data_te_withnoise2 = data_te_withnoise2 / (1 + noiseweight);
 end
 
 

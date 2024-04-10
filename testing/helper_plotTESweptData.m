@@ -82,11 +82,7 @@ for didx = 1:datacount
     % We have three situations: Either it's near log2(bins), or it's 1-2 bits,
     % or it's absurdly high due to an extrapolation error. Force the first two.
 
-    ymaxval = log2(histbinlist(bidx));
-    datamaxval = datavals(:,:,bidx,didx);
-    datamaxval = max(datamaxval, [], 'all');
-    ymaxval = min(datamaxval, ymaxval) + 0.5;
-    ymaxval = max(1, ymaxval);
+    ymaxval = helper_getYMax( histbinlist(bidx), datavals(:,:,bidx,didx) );
 
 
     clf('reset');
@@ -117,11 +113,18 @@ for didx = 1:datacount
 
     legend('Location', 'northwest');
 
-    title([ titleprefix ' - ' datatitles{didx} ...
-      sprintf(' - %d bins', histbinlist(bidx)) ]);
+    if isnan(histbinlist(bidx))
+      title([ titleprefix ' - ' datatitles{didx} ' - auto bins' ]);
 
-    saveas( thisfig, [ fileprefix '-laglength-' datalabels{didx} ...
-      sprintf('-%02dbins.png', histbinlist(bidx)) ] );
+      saveas( thisfig, [ fileprefix '-laglength-' datalabels{didx} ...
+        '-autobins.png' ] );
+    else
+      title([ titleprefix ' - ' datatitles{didx} ...
+        sprintf(' - %d bins', histbinlist(bidx)) ]);
+
+      saveas( thisfig, [ fileprefix '-laglength-' datalabels{didx} ...
+        sprintf('-%02dbins.png', histbinlist(bidx)) ] );
+    end
 
   end
 end
@@ -139,11 +142,7 @@ for bidx = 1:bincount
     % We have three situations: Either it's near log2(bins), or it's 1-2 bits,
     % or it's absurdly high due to an extrapolation error. Force the first two.
 
-    ymaxval = log2(histbinlist(bidx));
-    datamaxval = datavals(:,sidx,bidx,:);
-    datamaxval = max(datamaxval, [], 'all');
-    ymaxval = min(datamaxval, ymaxval) + 0.5;
-    ymaxval = max(1, ymaxval);
+    ymaxval = helper_getYMax( histbinlist(bidx), datavals(:,sidx,bidx,:) );
 
 
     clf('reset');
@@ -176,11 +175,19 @@ for bidx = 1:bincount
 
     countlabel = helper_makePrettyCount(sampcountlist(sidx));
 
-    title([ titleprefix ' - ' sprintf(' - %d bins - ', histbinlist(bidx)) ...
-      countlabel ' samples' ]);
+    if isnan(histbinlist(bidx))
+      title([ titleprefix ' - auto bins -' countlabel ' samples' ]);
 
-    saveas( thisfig, [ fileprefix '-lagcase-' ...
-      sprintf('%02dbins', histbinlist(bidx)) '-' countlabel 'samp.png' ] );
+      saveas( thisfig, [ fileprefix '-lagcase-autobins-' ...
+        countlabel 'samp.png' ] );
+    else
+      title([ titleprefix ' - ' ...
+        sprintf('%d bins - ', histbinlist(bidx)) ...
+        countlabel ' samples' ]);
+
+      saveas( thisfig, [ fileprefix '-lagcase-' ...
+        sprintf('%02dbins', histbinlist(bidx)) '-' countlabel 'samp.png' ] );
+    end
 
   end
 end
@@ -198,11 +205,7 @@ for didx = 1:datacount
   % We have three situations: Either it's near log2(bins), or it's 1-2 bits,
   % or it's absurdly high due to an extrapolation error. Force the first two.
 
-  ymaxval = log2(max(histbinlist));
-  datamaxval = datavals(testlagidx,:,:,didx);
-  datamaxval = max(datamaxval, [], 'all');
-  ymaxval = min(datamaxval, ymaxval) + 0.5;
-  ymaxval = max(1, ymaxval);
+  ymaxval = helper_getYMax( histbinlist, datavals(testlagidx,:,:,didx) );
 
 
   clf('reset');
@@ -213,8 +216,12 @@ for didx = 1:datacount
     thisdata = datavals(testlagidx,:,bidx,didx);
     thisdata = reshape(thisdata, size(sampcountlist));
 
-    plot( sampcountlist, thisdata, 'DisplayName', ...
-      sprintf('%d bins', histbinlist(bidx)) );
+    if isnan(histbinlist(bidx))
+      plot( sampcountlist, thisdata, 'DisplayName', 'auto bins' );
+    else
+      plot( sampcountlist, thisdata, 'DisplayName', ...
+        sprintf('%d bins', histbinlist(bidx)) );
+    end
   end
 
   plot( sampcountlist, zeros(size(sampcountlist)), ...
@@ -246,6 +253,32 @@ close(thisfig);
 
 
 % Done.
+end
+
+
+%
+% Helper Functions
+
+
+function ymaxval = helper_getYMax( histbins, datavals )
+
+  % FIXME - Kludge the upper bound.
+  % We have three situations: Either it's near log2(bins), or it's 1-2 bits,
+  % or it's absurdly high due to an extrapolation error. Force the first two.
+
+  % We may also be passed a bin count of "NaN" for discrete data.
+
+  binmaxval = log2(max(histbins));
+  datamaxval = max(datavals, [], 'all');
+
+  if isnan(binmaxval)
+    ymaxval = datamaxval;
+  else
+    ymaxval = min(datamaxval, binmaxval);
+  end
+
+  ymaxval = max(1, ymaxval + 0.5);
+
 end
 
 

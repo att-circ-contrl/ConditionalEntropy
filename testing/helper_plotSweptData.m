@@ -33,11 +33,17 @@ for didx = 1:length(datalabels)
   % We have three situations: Either it's near log2(bins), or it's 1-2 bits,
   % or it's absurdly high due to an extrapolation error. Force the first two.
 
-  ymaxval = log2(max(histbinlist));
+  binmaxval = log2(max(histbinlist));
   datamaxval = datavals(:,:,didx);
   datamaxval = max(datamaxval, [], 'all');
-  ymaxval = min(datamaxval, ymaxval) + 0.5;
-  ymaxval = max(1, ymaxval);
+
+  if isnan(binmaxval)
+    ymaxval = datamaxval;
+  else
+    ymaxval = min(datamaxval, binmaxval);
+  end
+
+  ymaxval = max(1, ymaxval + 0.5);
 
 
   clf('reset');
@@ -47,8 +53,14 @@ for didx = 1:length(datalabels)
   for bidx = 1:length(histbinlist)
     thisdata = datavals(:,bidx,didx);
     thisdata = reshape(thisdata, size(sampcountlist));
-    plot( sampcountlist, thisdata, ...
-      'DisplayName', sprintf('%d bins', histbinlist(bidx)) );
+
+    if isnan(histbinlist(bidx))
+      plot( sampcountlist, thisdata, ...
+        'DisplayName', 'auto bins' );
+    else
+      plot( sampcountlist, thisdata, ...
+        'DisplayName', sprintf('%d bins', histbinlist(bidx)) );
+    end
   end
 
   plot( sampcountlist, zeros(size(sampcountlist)), ...

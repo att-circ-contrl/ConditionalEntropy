@@ -39,7 +39,7 @@ datasets_mutual_ft = ...
   helper_makeDatasetsTransfer_FT(ftsamps, ft_trials, te_test_lag, signal_type);
 
 
-if want_test_entropy && want_nonswept
+if want_test_entropy && (~want_discrete_histbins) && want_nonswept
 
   reportmsg = '';
   thismsg = '== Shannon entropy report begins.';
@@ -548,6 +548,11 @@ if want_sweep_sampcount
     swept_histbins = [ histbins ];
   end
 
+  if want_discrete_histbins
+    want_sweep_histbins = false;
+    swept_histbins = [ nan ];
+  end
+
 
   % Get geometry.
   sampsweepsize = length(swept_sampcounts);
@@ -612,7 +617,7 @@ if want_sweep_sampcount
 
     % Entropy.
 
-    if want_test_entropy
+    if want_test_entropy && (~want_discrete_histbins)
       thisdatasetlist = helper_makeDatasetsShannon( thissampcount );
 
       tic;
@@ -665,25 +670,34 @@ if want_sweep_sampcount
           thisdata = thisdatasetlist_ft{didx,1};
 
           for bidx = 1:binsweepsize
+            if want_discrete_histbins
+              thisbins = cEn_getMultivariateHistBinsDiscreteFT( ...
+                thisdata, thisdata.label );
+            else
+              thisbins = swept_histbins(bidx);
+            end
+
             conditionalraw( sidx, bidx, didx ) = ...
-              cEn_calcConditionalShannonFT( ...
-                thisdata, {}, swept_histbins(bidx) );
+              cEn_calcConditionalShannonFT( thisdata, {}, thisbins );
 
             conditionalext( sidx, bidx, didx ) = ...
-              cEn_calcConditionalShannonFT( ...
-                thisdata, {}, swept_histbins(bidx), struct() );
+              cEn_calcConditionalShannonFT( thisdata, {}, thisbins, struct() );
           end
         else
           thisdata = thisdatasetlist{didx,1};
 
           for bidx = 1:binsweepsize
+            if want_discrete_histbins
+              thisbins = cEn_getMultivariateHistBinsDiscrete( thisdata );
+            else
+              thisbins = swept_histbins(bidx);
+            end
+
             conditionalraw( sidx, bidx, didx ) = ...
-              cEn_calcConditionalShannon( ...
-                thisdata, swept_histbins(bidx) );
+              cEn_calcConditionalShannon( thisdata, thisbins );
 
             conditionalext( sidx, bidx, didx ) = ...
-              cEn_calcConditionalShannon( ...
-                thisdata, swept_histbins(bidx), struct() );
+              cEn_calcConditionalShannon( thisdata, thisbins, struct() );
           end
         end
       end
@@ -709,21 +723,34 @@ if want_sweep_sampcount
           thisdata = thisdatasetlist_ft{didx,1};
 
           for bidx = 1:binsweepsize
+            if want_discrete_histbins
+              thisbins = cEn_getMultivariateHistBinsDiscreteFT( ...
+                thisdata, thisdata.label );
+            else
+              thisbins = swept_histbins(bidx);
+            end
+
             mutualraw( sidx, bidx, didx ) = cEn_calcMutualInfoFT( ...
-              thisdata, {}, swept_histbins(bidx) );
+              thisdata, {}, thisbins );
 
             mutualext( sidx, bidx, didx ) = cEn_calcMutualInfoFT( ...
-              thisdata, {}, swept_histbins(bidx), struct() );
+              thisdata, {}, thisbins, struct() );
           end
         else
           thisdata = thisdatasetlist{didx,1};
 
           for bidx = 1:binsweepsize
+            if want_discrete_histbins
+              thisbins = cEn_getMultivariateHistBinsDiscrete( thisdata );
+            else
+              thisbins = swept_histbins(bidx);
+            end
+
             mutualraw( sidx, bidx, didx ) = cEn_calcMutualInfo( ...
-              thisdata, swept_histbins(bidx) );
+              thisdata, thisbins );
 
             mutualext( sidx, bidx, didx ) = cEn_calcMutualInfo( ...
-              thisdata, swept_histbins(bidx), struct() );
+              thisdata, thisbins, struct() );
           end
         end
       end
@@ -757,20 +784,27 @@ if want_sweep_sampcount
           thisdata = thisdatasetlist_ft{didx,1};
 
           for bidx = 1:binsweepsize
+            if want_discrete_histbins
+              thisbins = cEn_getMultivariateHistBinsDiscreteFT( ...
+                thisdata, [ dstidx srcidx ] );
+            else
+              thisbins = swept_histbins(bidx);
+            end
+
             if want_parallel
               milist_raw = cEn_calcLaggedMutualInfoFT_MT( ...
                 thisdata, [ dstidx srcidx ], ...
-                te_laglist, swept_histbins(bidx) );
+                te_laglist, thisbins );
               milist_ext = cEn_calcLaggedMutualInfoFT_MT( ...
                 thisdata, [ dstidx srcidx ], ...
-                te_laglist, swept_histbins(bidx), struct() );
+                te_laglist, thisbins, struct() );
             else
               milist_raw = cEn_calcLaggedMutualInfoFT( ...
                 thisdata, [ dstidx srcidx ], ...
-                te_laglist, swept_histbins(bidx) );
+                te_laglist, thisbins );
               milist_ext = cEn_calcLaggedMutualInfoFT( ...
                 thisdata, [ dstidx srcidx ], ...
-                te_laglist, swept_histbins(bidx), struct() );
+                te_laglist, thisbins, struct() );
             end
 
             lagmutualraw( :, sidx, bidx, didx ) = milist_raw;
@@ -782,20 +816,27 @@ if want_sweep_sampcount
           srcseries = thisdata(srcidx,:);
 
           for bidx = 1:binsweepsize
+            if want_discrete_histbins
+              thisbins = cEn_getMultivariateHistBinsDiscrete( ...
+                [ dstseries ; srcseries ] );
+            else
+              thisbins = swept_histbins(bidx);
+            end
+
             if want_parallel
               milist_raw = cEn_calcLaggedMutualInfo_MT( ...
                 { dstseries, srcseries }, ...
-                te_laglist, swept_histbins(bidx) );
+                te_laglist, thisbins );
               milist_ext = cEn_calcLaggedMutualInfo_MT( ...
                 { dstseries, srcseries }, ...
-                te_laglist, swept_histbins(bidx), struct() );
+                te_laglist, thisbins, struct() );
             else
               milist_raw = cEn_calcLaggedMutualInfo( ...
                 { dstseries, srcseries }, ...
-                te_laglist, swept_histbins(bidx) );
+                te_laglist, thisbins );
               milist_ext = cEn_calcLaggedMutualInfo( ...
                 { dstseries, srcseries }, ...
-                te_laglist, swept_histbins(bidx), struct() );
+                te_laglist, thisbins, struct() );
             end
 
             lagmutualraw( :, sidx, bidx, didx ) = milist_raw;
@@ -832,22 +873,29 @@ if want_sweep_sampcount
           thisdata = thisdatasetlist_2ch_ft{didx,1};
 
           for bidx = 1:binsweepsize
+            if want_discrete_histbins
+              thisbins = cEn_getMultivariateHistBinsDiscreteFT( ...
+                thisdata, [ dstidx srcidx ] );
+            else
+              thisbins = swept_histbins(bidx);
+            end
+
             if want_parallel
               telist_raw = cEn_calcTransferEntropyFT_MT( ...
                 thisdata, [ dstidx srcidx ], ...
-                te_laglist, swept_histbins(bidx) );
+                te_laglist, thisbins );
 
               telist_ext = cEn_calcTransferEntropyFT_MT( ...
                 thisdata, [ dstidx srcidx ], ...
-                te_laglist, swept_histbins(bidx), struct() );
+                te_laglist, thisbins, struct() );
             else
               telist_raw = cEn_calcTransferEntropyFT( ...
                 thisdata, [ dstidx srcidx ], ...
-                te_laglist, swept_histbins(bidx) );
+                te_laglist, thisbins );
 
               telist_ext = cEn_calcTransferEntropyFT( ...
                 thisdata, [ dstidx srcidx ], ...
-                te_laglist, swept_histbins(bidx), struct() );
+                te_laglist, thisbins, struct() );
             end
 
             te2chraw(:,sidx,bidx,didx) = telist_raw;
@@ -859,20 +907,25 @@ if want_sweep_sampcount
           srcseries = thisdata(srcidx,:);
 
           for bidx = 1:binsweepsize
+            if want_discrete_histbins
+              thisbins = cEn_getMultivariateHistBinsDiscrete( ...
+                [ dstseries ; srcseries ] );
+            else
+              thisbins = swept_histbins(bidx);
+            end
+
             if want_parallel
               telist_raw = cEn_calcTransferEntropy_MT( ...
-                { dstseries, srcseries }, te_laglist, swept_histbins(bidx) );
+                { dstseries, srcseries }, te_laglist, thisbins );
 
               telist_ext = cEn_calcTransferEntropy_MT( ...
-                { dstseries, srcseries }, te_laglist, swept_histbins(bidx), ...
-                struct() );
+                { dstseries, srcseries }, te_laglist, thisbins, struct() );
             else
               telist_raw = cEn_calcTransferEntropy( ...
-                { dstseries, srcseries }, te_laglist, swept_histbins(bidx) );
+                { dstseries, srcseries }, te_laglist, thisbins );
 
               telist_ext = cEn_calcTransferEntropy( ...
-                { dstseries, srcseries }, te_laglist, swept_histbins(bidx), ...
-                struct() );
+                { dstseries, srcseries }, te_laglist, thisbins, struct() );
             end
 
             te2chraw(:,sidx,bidx,didx) = telist_raw;
@@ -899,28 +952,35 @@ if want_sweep_sampcount
           thisdata = thisdatasetlist_3ch_ft{didx,1};
 
           for bidx = 1:binsweepsize
+            if want_discrete_histbins
+              thisbins = cEn_getMultivariateHistBinsDiscreteFT( ...
+                thisdata, [ dstidx src1idx src2idx ] );
+            else
+              thisbins = swept_histbins(bidx);
+            end
+
             if want_parallel
               thistelist = cEn_calcTransferEntropyFT_MT( ...
                 thisdata, [ dstidx src1idx src2idx ], ...
-                te_laglist, swept_histbins(bidx) );
+                te_laglist, thisbins );
               telist1_raw = thistelist(1,:);
               telist2_raw = thistelist(2,:);
 
               thistelist = cEn_calcTransferEntropyFT_MT( ...
                 thisdata, [ dstidx src1idx src2idx ], ...
-                te_laglist, swept_histbins(bidx), struct() );
+                te_laglist, thisbins, struct() );
               telist1_ext = thistelist(1,:);
               telist2_ext = thistelist(2,:);
             else
               thistelist = cEn_calcTransferEntropyFT( ...
                 thisdata, [ dstidx src1idx src2idx ], ...
-                te_laglist, swept_histbins(bidx) );
+                te_laglist, thisbins );
               telist1_raw = thistelist(1,:);
               telist2_raw = thistelist(2,:);
 
               thistelist = cEn_calcTransferEntropyFT( ...
                 thisdata, [ dstidx src1idx src2idx ], ...
-                te_laglist, swept_histbins(bidx), struct() );
+                te_laglist, thisbins, struct() );
               telist1_ext = thistelist(1,:);
               telist2_ext = thistelist(2,:);
             end
@@ -938,30 +998,35 @@ if want_sweep_sampcount
           src2series = thisdata(src2idx,:);
 
           for bidx = 1:binsweepsize
+            if want_discrete_histbins
+              thisbins = cEn_getMultivariateHistBinsDiscrete( ...
+                [ dstseries ; src1series ; src2series ] );
+            else
+              thisbins = swept_histbins(bidx);
+            end
+
             if want_parallel
               thistelist = cEn_calcTransferEntropy_MT( ...
                 { dstseries, src1series, src2series }, ...
-                te_laglist, swept_histbins(bidx) );
+                te_laglist, thisbins );
               telist1_raw = thistelist(1,:);
               telist2_raw = thistelist(2,:);
 
               thistelist = cEn_calcTransferEntropy_MT( ...
                 { dstseries, src1series, src2series }, ...
-                te_laglist, swept_histbins(bidx), ...
-                struct() );
+                te_laglist, thisbins, struct() );
               telist1_ext = thistelist(1,:);
               telist2_ext = thistelist(2,:);
             else
               thistelist = cEn_calcTransferEntropy( ...
                 { dstseries, src1series, src2series }, ...
-                te_laglist, swept_histbins(bidx) );
+                te_laglist, thisbins );
               telist1_raw = thistelist(1,:);
               telist2_raw = thistelist(2,:);
 
               thistelist = cEn_calcTransferEntropy( ...
                 { dstseries, src1series, src2series }, ...
-                te_laglist, swept_histbins(bidx), ...
-                struct() );
+                te_laglist, thisbins, struct() );
               telist1_ext = thistelist(1,:);
               telist2_ext = thistelist(2,:);
             end
@@ -996,7 +1061,7 @@ if want_sweep_sampcount
 
   disp('== Generating sweep plots.');
 
-  if want_test_entropy
+  if want_test_entropy && (~want_discrete_histbins)
     helper_plotSweptData( entropyraw, swept_sampcounts, swept_histbins, ...
       datalabels_entropy, datatitles_entropy, 'Shannon Entropy (bits)', ...
       'Entropy (raw)', [ plotdir filesep 'entropy-raw' ] );

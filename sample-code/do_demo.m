@@ -6,16 +6,16 @@
 % Configuration.
 
 % This needs the Parallel Computing Toolbox.
-want_parallel = true;
+want_parallel = false;
 
 swept_histbins = [ 8 16 32 ];
 fixed_histbins_te = 8;
 
 % 30k takes a minute or two. Higher counts are more informative.
 swept_sampcounts = [ 3000 10000 30000 ];
-swept_sampcounts = [ swept_sampcounts 100000 ];
-swept_sampcounts = [ swept_sampcounts 300000 ];
-swept_sampcounts = [ swept_sampcounts 1000000 ];
+%swept_sampcounts = [ swept_sampcounts 100000 ];
+%swept_sampcounts = [ swept_sampcounts 300000 ];
+%swept_sampcounts = [ swept_sampcounts 1000000 ];
 
 laglist = [ -15:15 ];
 test_lag = 6;
@@ -192,31 +192,22 @@ for sidx = 1:length(swept_sampcounts)
     % Don't use extrapolation for the demo.
     % Results are similar to above: It converges faster but isn't monotonic.
 
-    dstseries_st = datamatrix_lagged_st(1,:);
-    srcseries_st = datamatrix_lagged_st(2,:);
-
-    dstseries_wk = datamatrix_lagged_wk(1,:);
-    srcseries_wk = datamatrix_lagged_wk(2,:);
-
-    dstseries_disc = datamatrix_discrete(1,:);
-    srcseries_disc = datamatrix_discrete(2,:);
-
     if want_parallel
       mutualbits_lagged_st(:, sidx, bidx) = cEn_calcLaggedMutualInfo_MT( ...
-        { dstseries_st, srcseries_st }, laglist, histbins );
+        datamatrix_lagged_st, laglist, histbins );
       mutualbits_lagged_wk(:, sidx, bidx) = cEn_calcLaggedMutualInfo_MT( ...
-        { dstseries_wk, srcseries_wk }, laglist, histbins );
+        datamatrix_lagged_wk, laglist, histbins );
 
       mutualbits_discrete(:, sidx, bidx) = cEn_calcLaggedMutualInfo_MT( ...
-        { dstseries_disc, srcseries_disc }, laglist, histbins );
+        datamatrix_discrete, laglist, histbins );
     else
       mutualbits_lagged_st(:, sidx, bidx) = cEn_calcLaggedMutualInfo( ...
-        { dstseries_st, srcseries_st }, laglist, histbins );
+        datamatrix_lagged_st, laglist, histbins );
       mutualbits_lagged_wk(:, sidx, bidx) = cEn_calcLaggedMutualInfo( ...
-        { dstseries_wk, srcseries_wk }, laglist, histbins );
+        datamatrix_lagged_wk, laglist, histbins );
 
       mutualbits_discrete(:, sidx, bidx) = cEn_calcLaggedMutualInfo( ...
-        { dstseries_disc, srcseries_disc }, laglist, histbins );
+        datamatrix_discrete, laglist, histbins );
     end
 
   end
@@ -239,31 +230,22 @@ for sidx = 1:length(swept_sampcounts)
     % Don't use extrapolation for the demo.
     % Results are similar to above: It converges faster but isn't monotonic.
 
-    dstseries_st = datamatrix_lagged_st(1,:);
-    srcseries_st = datamatrix_lagged_st(2,:);
-
-    dstseries_wk = datamatrix_lagged_wk(1,:);
-    srcseries_wk = datamatrix_lagged_wk(2,:);
-
-    dstseries_disc = datamatrix_discrete(1,:);
-    srcseries_disc = datamatrix_discrete(2,:);
-
     if want_parallel
       transferbits_st(:, sidx, bidx) = cEn_calcTransferEntropy_MT( ...
-        { dstseries_st, srcseries_st }, laglist, histbins );
+        datamatrix_lagged_st, laglist, histbins );
       transferbits_wk(:, sidx, bidx) = cEn_calcTransferEntropy_MT( ...
-        { dstseries_wk, srcseries_wk }, laglist, histbins );
+        datamatrix_lagged_wk, laglist, histbins );
 
       transferbits_discrete(:, sidx, bidx) = cEn_calcTransferEntropy_MT( ...
-        { dstseries_disc, srcseries_disc }, laglist, histbins );
+        datamatrix_discrete, laglist, histbins );
     else
       transferbits_st(:, sidx, bidx) = cEn_calcTransferEntropy( ...
-        { dstseries_st, srcseries_st }, laglist, histbins );
+        datamatrix_lagged_st, laglist, histbins );
       transferbits_wk(:, sidx, bidx) = cEn_calcTransferEntropy( ...
-        { dstseries_wk, srcseries_wk }, laglist, histbins );
+        datamatrix_lagged_wk, laglist, histbins );
 
       transferbits_discrete(:, sidx, bidx) = cEn_calcTransferEntropy( ...
-        { dstseries_disc, srcseries_disc }, laglist, histbins );
+        datamatrix_discrete, laglist, histbins );
     end
 
   end

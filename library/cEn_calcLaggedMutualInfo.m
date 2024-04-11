@@ -16,10 +16,11 @@ function milist = ...
 % compensate for samller sample counts, this may optionally use the
 % extrapolation method described in EXTRAPOLATION.txt.
 %
-% "dataseries" is a cell array of length Nchans containing data series. The
-%   first series (chan = 1) is the destination signal; remaining series are
-%   source signals. Each series is either a vector of length Nsamples or a
-%   matrix of size Ntrials x Nsamples.
+% "dataseries" is a Nchans x Nsamples matrix or a cell array of length
+%   Nchans containing data series. The first series (chan = 1) is the
+%   destination signal; remaining series are source signals. For cell
+%   array data, each cell contains either a vector of length Nsamples or
+%   a matrix of size Ntrials x Nsamples.
 % "laglist" is a vector containing sample time lags to test. These are
 %   applied to the "source" signals. These may be negative (future times).
 % "bins" is a scalar or vector (to generate bins) or a cell array (to supply
@@ -35,7 +36,20 @@ function milist = ...
 %   mutual information estimates for each time lag.
 
 
-% Metadata.
+% Convert matrix data into single-trial cell data.
+
+if ~iscell(dataseries)
+  % This is a Nchans x Nsamples matrix.
+  chancount = size(dataseries,1);
+  scratch = {};
+  for cidx = 1:chancount
+    scratch{cidx} = dataseries(cidx,:);
+  end
+  dataseries = scratch;
+end
+
+
+% Get metadata.
 
 want_extrap = exist('exparams', 'var');
 

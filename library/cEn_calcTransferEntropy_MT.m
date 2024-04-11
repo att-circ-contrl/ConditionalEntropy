@@ -36,10 +36,11 @@ function telist = ...
 % histogram. This gets very big very quickly, and also needs a very large
 % number of samples to get good statistics.
 %
-% "dataseries" is a cell array of length Nchans containing data series.
-%   The first series (chan = 1) is the variable Y; remaining series are X_k.
-%   Each series is a either a vector of length Nsamples or a matrix of
-%   size Ntrials x Nsamples.
+% "dataseries" is a Nchans x Nsamples matrix or a cell array of length
+%   Nchans containing data series. The first series (chan = 1) is the
+%   destination signal Y; remaining series are source signals X_k. For cell
+%   array data, each cell contains either a vector of length Nsamples or
+%   a matrix of size Ntrials x Nsamples.
 % "laglist" is a vector containing sample lags to test. These correspond to
 %   tau in the equation above. These may be negative (looking at the future).
 % "bins" is a scalar or vector (to generate bins) or a cell array (to supply
@@ -54,6 +55,19 @@ function telist = ...
 % "telist" is a (Nchans-1,Nlags) matrix containing transfer entropy
 %   estimates from X_k (dataseries{k+1}) to Y (dataseries{1}) for each
 %   time lag.
+
+
+% Convert matrix data into single-trial cell data.
+
+if ~iscell(dataseries)
+  % This is a Nchans x Nsamples matrix.
+  chancount = size(dataseries,1);
+  scratch = {};
+  for cidx = 1:chancount
+    scratch{cidx} = dataseries(cidx,:);
+  end
+  dataseries = scratch;
+end
 
 
 % Metadata.

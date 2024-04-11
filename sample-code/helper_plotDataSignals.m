@@ -1,16 +1,16 @@
 function helper_plotDataSignals( dataseries, chanlabels, ...
-  plotsamps, titleprefix, fileprefix )
+  plotsamps, figtitle, fname )
 
 % function helper_plotDataSignals( dataseries, chanlabels, ...
-%   plotsamps, titleprefix, fileprefix )
+%   plotsamps, figtitle, fname )
 %
 % This plots the signals from one dataset.
 %
 % "dataseries" is a Nchans x Nsamples matrix with signal data.
 % "chanlabels" is a cell array containing plot-safe channel names.
 % "plotsamps" is the number of samples to plot.
-% "titleprefix" is a character vector used for building the plot title.
-% "fileprefix" is a character vector used for building filenames.
+% "figtitle" is a character vector to use as the plot title.
+% "fname" is a character vector with the filename to write the plot to.
 %
 % No return value.
 
@@ -42,9 +42,9 @@ ylabel('Amplitude (a.u.)');
 
 legend('Location', 'northeast');
 
-title( titleprefix );
+title( figtitle );
 
-saveas( thisfig, [ fileprefix '.png' ] );
+saveas( thisfig, fname );
 
 close(thisfig);
 

@@ -1,0 +1,48 @@
+% Chris's Entropy Library - User Guide - Overview
+% Written by Christopher Thomas.
+
+\chapter{Overview}
+\label{sect-over}
+
+This library provides a set of functions used for calculating entropy and
+entropy-related measures on datasets. These were written to deal with
+neuroscience data (continuous brain wave signals and discrete counts of
+the numbers spike events seen), but the library should work with any type
+of data.
+
+Measures computed are:
+
+\begin{itemize}
+%
+\item \textbf{Shannon Entropy} - The amount of ``surprise'' associated
+with a given data sample, and the average ``surprise'' for samples in a
+data stream. This is the information content of the stream.
+%
+\item \textbf{Conditional Entropy} - The amount learned from samples of
+variable Y when we already know the value of a related variable X.
+%
+\item \textbf{Mutual Information} - The amount of information shared by
+samples of related variables Y and X. Measuring either one gets you this
+information.
+%
+\item \textbf{Transfer Entropy} - The amount of information about the
+future of variable Y that you learn by knowing the past of variable X, in
+addition to what you already know from the past of variable Y.
+%
+\end{itemize}
+
+These measures are discussed in detail in Section \ref{sect-entropy}.
+
+A brief description of how to use this library is given in Section
+\ref{sect-howto}. For more information, see the sample code in the
+``\verb|source-code|'' folder. This section also provides a brief overview
+of considerations relating to neuroscience data analysis.
+
+Section \ref{sect-extrap} describes the quadratic extrapolation algorithm
+that was used in Palmigiano 2017. This is intended to allow reliable
+estimates of several entropy measures with fewer data samples than would
+otherwise be needed (or equivalently, to improve the reliability of these
+measures using a fixed number of samples).
+
+%
+% This is the end of the file.

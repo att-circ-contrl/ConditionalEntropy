@@ -10,12 +10,11 @@ GUIDEBASE=guide
 
 GUIDEBITS=\
 	$(GUIDENAME).tex		\
+	$(GUIDEBASE)-over.tex		\
+	$(GUIDEBASE)-entropy.tex	\
 
-# FIXME - Guide NYI.
-#	$(GUIDEBASE)-over.tex		\
-#	$(GUIDEBASE)-model.tex		\
 #	$(GUIDEBASE)-howto.tex		\
-#	$(GUIDEBASE)-math.tex
+#	$(GUIDEBASE)-extrap.tex
 
 REFBITS=\
 	$(REFNAME).tex

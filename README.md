@@ -4,7 +4,7 @@
 
 This library provides functions for computing Shannon entropy, conditional
 Shannon entropy, mututal information, and (approximate) transfer entropy
-of continuous-valued data.
+of continuous-valued data and of discrete-valued data (event counts).
 
 FIXME - References go here.
 

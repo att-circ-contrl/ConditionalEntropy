@@ -23,7 +23,8 @@ function helper_plotTESweptData( ...
 % "laglist" is a vector containing time lags (in samples).
 % "testlag" is a scalar with a time lag to use for single-lag plots.
 % "sampcountlist" is a vector containing sample counts.
-% "histbinlist" is a vector containing histogram bin counts.
+% "histbinlist" is a vector containing histogram bin counts. If this is NaN,
+%   discrete-event auto-binning is assumed.
 % "datalabels" is a cell array containing filename- and plot-safe data case
 %   labels.
 % "datatitles" is a cell array containing plot-safe descriptive data case

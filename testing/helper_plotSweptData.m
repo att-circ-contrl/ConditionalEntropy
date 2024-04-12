@@ -10,7 +10,8 @@ function helper_plotSweptData( datavals, sampcountlist, histbinlist, ...
 % "datavals" is a matrix of size Nsampcounts x Nhistbins x Ndatacases,
 %   containing entropy data.
 % "sampcountlist" is a vector containing sample counts.
-% "histbinlist" is a vector containing histogram bin counts.
+% "histbinlist" is a vector containing histogram bin counts. If this is NaN,
+%   discrete-event auto-binning is assumed.
 % "datalabels" is a cell array containing filename- and plot-safe data case
 %   labels.
 % "datatitles" is a cell array containing plot-safe descriptive data case

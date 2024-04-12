@@ -55,10 +55,13 @@ mutualbits_lagged_st = ...
   nan([ length(laglist), length(swept_sampcounts), length(swept_histbins) ]);
 mutualbits_lagged_wk = mutualbits_lagged_st;
 mutualbits_discrete = mutualbits_lagged_st;
+mutualbits_discrete_auto = ...
+  nan([ length(laglist), length(swept_sampcounts), 1 ]);
 
 transferbits_st = mutualbits_lagged_st;
 transferbits_wk = mutualbits_lagged_st;
 transferbits_discrete = mutualbits_lagged_st;
+transferbits_discrete_auto = mutualbits_discrete_auto;
 
 ptebits_st = mutualbits_lagged_st;
 ptebits_wk = mutualbits_lagged_st;
@@ -212,6 +215,27 @@ for sidx = 1:length(swept_sampcounts)
 
   end
 
+  % For discrete data (event counts), we have the option of using one bin
+  % per count value. There's a FT version of this function too.
+
+  histbins = cEn_getMultivariateHistBinsDiscrete( datamatrix_discrete );
+
+  % NOTE - Report the number of histogram bins.
+  % "histbins" is a cell array of vectors with bin edges.
+  thismsg = '.. Auto-detected bin counts for discrete data: ';
+  for bidx = 1:length(histbins)
+    thismsg = [ thismsg sprintf('  %d', length(histbins{bidx}) - 1) ];
+  end
+  disp(thismsg);
+
+  if want_parallel
+    mutualbits_discrete_auto(:,sidx,1) = cEn_calcLaggedMutualInfo_MT( ...
+      datamatrix_discrete, laglist, histbins );
+  else
+    mutualbits_discrete_auto(:,sidx,1) = cEn_calcLaggedMutualInfo( ...
+      datamatrix_discrete, laglist, histbins );
+  end
+
   % Progress report.
 
   durstring = helper_makePrettyTime(toc);
@@ -248,6 +272,19 @@ for sidx = 1:length(swept_sampcounts)
         datamatrix_discrete, laglist, histbins );
     end
 
+  end
+
+  % For discrete data (event counts), we have the option of using one bin
+  % per count value. There's a FT version of this function too.
+
+  histbins = cEn_getMultivariateHistBinsDiscrete( datamatrix_discrete );
+
+  if want_parallel
+    transferbits_discrete_auto(:,sidx,1) = cEn_calcTransferEntropy_MT( ...
+      datamatrix_discrete, laglist, histbins );
+  else
+    transferbits_discrete_auto(:,sidx,1) = cEn_calcTransferEntropy( ...
+      datamatrix_discrete, laglist, histbins );
   end
 
   % Progress report.
@@ -350,6 +387,13 @@ helper_plotLagged( ...
   'Time-Lagged Mutual Information (discrete events)', ...
   [ plotdir filesep 'lagged-mutual-disc-%s.png' ] );
 
+helper_plotLagged( ...
+  mutualbits_discrete_auto, ...
+  laglist, test_lag, swept_sampcounts, NaN, ...
+  'Mutual Information (bits)', ...
+  'Time-Lagged Mutual Information (discrete events)', ...
+  [ plotdir filesep 'lagged-mutual-autodisc-%s.png' ] );
+
 
 % Transfer entropy.
 
@@ -368,6 +412,12 @@ helper_plotLagged( ...
   laglist, test_lag, swept_sampcounts, swept_histbins, ...
   'Transfer Entropy (bits)', 'Transfer Entropy (discrete events)', ...
   [ plotdir filesep 'transfer-disc-%s.png' ], 'squashzero' );
+
+helper_plotLagged( ...
+  transferbits_discrete_auto, ...
+  laglist, test_lag, swept_sampcounts, NaN, ...
+  'Transfer Entropy (bits)', 'Transfer Entropy (discrete events)', ...
+  [ plotdir filesep 'transfer-autodisc-%s.png' ], 'squashzero' );
 
 
 % Partial transfer entropy.

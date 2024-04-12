@@ -21,7 +21,8 @@ function helper_plotLagged( ...
 % "laglist" is a vector containing time lags (in samples).
 % "testlag" is a scalar with a time lag to use for the single-lag plot.
 % "sampcountlist" is a vector containing sample counts.
-% "histbinlist" is a vector containing histogram bin counts.
+% "histbinlist" is a vector containing histogram bin counts. If this is
+%   NaN, discrete-event auto-binning is assumed.
 % "axistitle" is a character vector with the Y axis title.
 % "titleprefix" is a character vector with a prefix to use when building
 %   plot titles.

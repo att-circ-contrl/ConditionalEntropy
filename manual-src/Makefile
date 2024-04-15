@@ -12,9 +12,8 @@ GUIDEBITS=\
 	$(GUIDENAME).tex		\
 	$(GUIDEBASE)-over.tex		\
 	$(GUIDEBASE)-entropy.tex	\
-
-#	$(GUIDEBASE)-howto.tex		\
-#	$(GUIDEBASE)-extrap.tex
+	$(GUIDEBASE)-howto.tex		\
+	$(GUIDEBASE)-extrap.tex
 
 REFBITS=\
 	$(REFNAME).tex

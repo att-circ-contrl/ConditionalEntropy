@@ -13,6 +13,7 @@ fixed_histbins_te = 8;
 
 % 30k takes a minute or two. Higher counts are more informative.
 swept_sampcounts = [ 3000 10000 30000 ];
+%swept_sampcounts = [ 1000 swept_sampcounts ];
 %swept_sampcounts = [ swept_sampcounts 100000 ];
 %swept_sampcounts = [ swept_sampcounts 300000 ];
 %swept_sampcounts = [ swept_sampcounts 1000000 ];
@@ -160,11 +161,11 @@ for sidx = 1:length(swept_sampcounts)
       cEn_calcMutualInfo( datamatrix_strong, histbins );
 
 
-    % Calculate it again for the "strong" case, using extrapolation.
+    % Calculate it again for the "weak" case, using extrapolation.
     % Do this by adding an extrapolation parameter structure as the last
     % argument. An empty structure gets filled with default settings.
     mutualbits_extrap( sidx, bidx ) = ...
-      cEn_calcMutualInfo( datamatrix_strong, histbins, struct() );
+      cEn_calcMutualInfo( datamatrix_weak, histbins, struct() );
 
 
     % Calculate 3-channel mutual information using a Field Trip structure.
@@ -355,7 +356,7 @@ helper_plotMutualInfo( ...
 helper_plotMutualInfo( ...
   mutualbits_extrap, swept_sampcounts, swept_histbins, ...
   'Mutual Information (bits)', ...
-  'Mutual Information (strong coupling) (extrapolated)', ...
+  'Mutual Information (weak coupling) (extrapolated)', ...
   [ plotdir filesep 'mutual-extrap.png' ] );
 
 helper_plotMutualInfo( ...

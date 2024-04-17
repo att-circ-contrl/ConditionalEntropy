@@ -26,7 +26,7 @@ cleaned-up subset of this.
 The Bell System Technical Journal,
 v 27, pp 379-423,623-656, July, October 1948
 * A. Treves, S. Panzeri, _The Upward Bias in Measures of Information
-Derived from Limited Data Samples),
+Derived from Limited Data Samples_,
 Neural Computation, v 7, pp 399-407, 1995
 * S. P. Strong, R. Koberle, R. R de Ruyter van Stevenick, W Bailek,
 _Entropy and Information in Neural Spike Trains_,

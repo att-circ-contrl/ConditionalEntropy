@@ -4,12 +4,94 @@
 \chapter{Using This Library}
 \label{sect-howto}
 
-\iffalse
-A brief description of how to use this library is given in Section
-\ref{sect-howto}. For more information, see the sample code in the
-``\verb|source-code|'' folder. This section also provides a brief overview
-of considerations relating to neuroscience data analysis.
-\fi
+Sample code for using this library is found in ``\verb|do_demo.m|'' in the
+``\verb|sample-code|'' folder. An overview of how to perform the various
+operations is below.
+%
+\begin{itemize}
+%
+\item Data is expected to be supplied either as matrices with dimension
+$N_{chans} \times N_{samples}$, or as Field Trip data structures.
+%
+\item To compute mutual information between two or more signals, use the
+\verb|cEn_calcMutualInfo| family of functions.
+%
+\item To compute time-lagged mutual information (mutual information between
+the present of a destination signal and the past of one or more source
+signals, use the \verb|cEn_calcLaggedMutualInfo| family of functions.
+%
+\item To compute transfer entropy from the past of one or more source
+signals to a destination signal, use the \verb|cEn_calcTransferEntropy|
+family of functions. If two or more source signals are supplied, this gives
+the partial transfer entropy from each of them.
+%
+\item The function versions with a ``\verb|FT|'' suffix accept Field Trip
+data structures. The function versions with a ``\verb|MT|'' suffix use a
+multithreaded implementation (faster but requires the Parallel Computing
+Toolbox).
+%
+\item Some functions accept an ``extrapolation parameter structure'' as an
+optional argument. If this is \textit{not supplied}, no extrapolation is
+performed. If this is ``\verb|struct()|'', extrapolation is performed and
+default parameters are used.
+%
+\item There are several different ways of specifying histogram bins for
+entropy calculations. These are discussed below.
+%
+\end{itemize}
+
+A complete list of functions and a description of the extrapolation
+parameter structure can be found in the Library Reference document. A
+description of the extrapolation algorithm is given in Section
+\ref{sect-extrap}.
+
+% FIXME - Force a page break.
+\clearpage
+For neuroscience data, the following considerations apply:
+%
+\begin{itemize}
+%
+\item For continuous-valued data like local field potentials, you'll need
+to decide on the number of bins used when building histograms (these are
+used as probability density functions). Mutual information requires building
+two-dimensional histograms (for two sources), transfer entropy requires
+three-dimensional histograms, and partial transfer entropy with two sources
+requires four-dimensional histograms. You need enough samples in the
+histogram bins for decent statistics, so the number of bins is usually kept
+very small (8 works well in the test code and sample code; literature
+typically uses even fewer than this).
+%
+\item If you specify the number of bins to be used, the calculation
+functions choose bin edges for each signal being processed such that each
+bin ends up with the same number of samples in it. This is the usual
+approach to constructing histograms for mutual information and transfer
+entropy analysis. You can specify one bin count to be used for all signals,
+or specify one bin count per signal so that each can have a different
+number of bins.
+%
+\item You can alternatively pass in a set of bin edges (one set per signal)
+as a cell array. This is mostly used when you want to perform several
+analyses and want to keep binning consistent between them.
+%
+\item For discrete-valued data like spike counts, you can use
+\verb|cEn_getMultivariateHistBinsDiscrete| to get a set of histogram bin
+edges that provides one bin per discrete value seen, for each input signal.
+%
+\item The more bins and histogram dimensions you have, the more samples are
+needed to compute information statistics. The practical effect is that
+you're going to need to aggregate across a lot of trials to get useful
+statistics for anything beyond two-signal mutual information. Extrapolation
+reduces the number of samples needed by about $3\times$ to $10\times$.
+%
+\item To measure uncertainty in information and entropy statistics, make a
+large number of surrogates via bootstrapping. This will let you determine if
+there are significant differences between trials from different experiment
+conditions. To measure significant changes with respect to a null condition,
+build a large number of surrogates via shuffling to get null case statistics.
+Anything involving ``a large number of surrogates'' will probably be the
+most time-consuming step of your analysis.
+%
+\end{itemize}
 
 %
 % This is the end of the file.

@@ -9,7 +9,6 @@
 want_parallel = false;
 
 swept_histbins = [ 8 16 32 ];
-fixed_histbins_te = 8;
 
 % 30k takes a minute or two. Higher counts are more informative.
 swept_sampcounts = [ 3000 10000 30000 ];

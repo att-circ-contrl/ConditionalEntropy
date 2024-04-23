@@ -68,8 +68,8 @@ H(Y|X_A,X_B) = - \sum_{j,k,m} P(x_{aj},x_{bk},y_m) \log_2 \left [
 \label{eq-cond-multi}
 \end{equation}
 
-\figdef{\includegraphics[width=0.9\columnwidth]
-{figs/conditional-entropy.png}}
+\figdef{\includegraphics[height=1.5in]
+{figs/conditional-entropy-edited.png}}
 {Conditional entropy with two signals (left) and three signals (right).}
 {fig-cond-def}
 
@@ -104,8 +104,8 @@ I(X,Y,Z) = \sum_{j,k,m} P(x_j,y_k,z_m) \log_2 \left [
 \label{eq-mutual-multi}
 \end{equation}
 
-\figdef{\includegraphics[width=0.9\columnwidth]
-{figs/mutual-information.png}}
+\figdef{\includegraphics[height=1.5in]
+{figs/mutual-information-edited.png}}
 {Mutual information with two signals (left) and three signals (right).}
 {fig-mutual-def}
 
@@ -118,12 +118,22 @@ I(X,Y,Z) = \sum_{j,k,m} P(x_j,y_k,z_m) \log_2 \left [
 \textbf{Transfer entropy} can be thought of as the amount of information
 about the future of variable Y that you learn by knowing the past of
 variable X, in addition to what you already know from the past of variable
-Y. This is illustrated in Figure \ref{fig-transfer-def}. Transfer entropy
-is defined by Equation \ref{eq-transfer-def}:
+Y. This is illustrated in Figure \ref{fig-transfer-def-ce}. Transfer entropy
+may be defined in terms of contitional entropy as shown in
+Equation \ref{eq-transfer-def}:
 
 \begin{equation}
 TE_{X \rightarrow Y} = H(Y|Y_{past}) - H(Y|Y_{past},X_{past})
 \label{eq-transfer-def}
+\end{equation}
+
+Transfer entropy may alternatively be defined in terms of conditional
+mutual information, per Equation \ref{eq-transfer-def-mi}. This is
+illustrated in Figure \ref{fig-transfer-def-mi}.
+
+\begin{equation}
+TE_{X \rightarrow Y} = I(X,X_{past}|Y_{past})
+\label{eq-transfer-def-mi}
 \end{equation}
 
 The $Y_{past}$ and $X_{past}$ terms are usually approximated by taking the
@@ -137,21 +147,36 @@ past value at some time $t-\delta t$ as a proxy for the entire past history:
 \label{eq-transfer-past}
 \end{equation}
 
-\figdef{\includegraphics[width=0.9\columnwidth]
-{figs/transfer-entropy.png}}
+\figdef{\includegraphics[height=1.5in]
+{figs/transfer-entropy-ce-edited.png}}
 {Transfer entropy between two signals, and its relation to conditional
 entropy.}
-{fig-transfer-def}
+{fig-transfer-def-ce}
 
+\figdef{\includegraphics[height=1.5in]
+{figs/transfer-entropy-mi-edited.png}}
+{Transfer entropy between two signals, and its relation to mutual
+information.}
+{fig-transfer-def-mi}
+
+% FIXME - Force a page break.
+\clearpage
+%
 \textbf{Partial transfer entropy} is used to disentangle the contributions
-of multiple X variables to some Y variable. Partial transfer entropy is
-defined by Equation \ref{eq-transfer-pte}:
+of multiple variables to some Y variable. This is illustrated in
+Figure \ref{fig-transfer-pte}. Partial transfer entropy is defined by
+Equation \ref{eq-transfer-pte}:
 
 \begin{equation}
-pTE_{X_A \rightarrow Y} = H(Y_A|Y_{past},X_{Bpast})
-- H(Y|Y_{past},X_{Apast},X_{Bpast})
+pTE_{A \rightarrow Y} = H(Y|Y_{past},B_{past})
+- H(Y|Y_{past},A_{past},B_{past})
 \label{eq-transfer-pte}
 \end{equation}
+
+\figdef{\includegraphics[height=1.5in]
+{figs/transfer-entropy-pte-edited.png}}
+{Partial transfer entropy between three signals.}
+{fig-transfer-pte}
 
 \section{References}
 \label{sect-entropy-refs}

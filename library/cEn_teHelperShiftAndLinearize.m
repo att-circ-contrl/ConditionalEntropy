@@ -8,8 +8,8 @@ function [ dstpresent dstpast srcpast ] = ...
 % partial transfer entropy calculations. Trials are concatenated after
 % shifting and cropping.
 %
-% NOTE - Instead of shifting the "past" signals left, the "present" signal
-% is shifted right (for positive time lags; reverse for negative).
+% NOTE - Instead of shifting the "past" signals right, the "present" signal
+% is shifted left (for testing positive time lags; reverse for negative).
 %
 % "dstseries" is a vector of length Nsamples or a Ntrials x Nsamples matrix
 %   containing the destination signal Y.
@@ -74,9 +74,9 @@ lastsamp = nsamples + minlag;
 
 % Shift, crop, and concatenate.
 
-% Instead of shifting the "past" versions left, shift "present" right.
+% Instead of shifting the "past" versions right, shift "present" left.
 
-dstpresent = circshift(dstseries, timelag, 2);
+dstpresent = circshift(dstseries, - timelag, 2);
 dstpast = dstseries;
 srcpast = srcseries;
 

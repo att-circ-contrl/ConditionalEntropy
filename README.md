@@ -10,6 +10,9 @@ FIXME - Still need to add the following:
 * Partial information decomposition.
 * Bootstrapping-based statistics (and maybe jackknife-based for faster but
 less accurate).
+* Granger causality (TE reduces to this for normal random variables).
+* Pearson's correlation (MI interconverts with this for zero-mean normal
+random variables).
 
 ## Folders
 

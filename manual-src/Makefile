@@ -1,4 +1,4 @@
-# Chris's Entropy Library - Documentation.
+# Conditional Entropy Library - Documentation.
 # Written by Christopher Thomas.
 
 REFNAME=entropy-libref

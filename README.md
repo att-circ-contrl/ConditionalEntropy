@@ -1,4 +1,4 @@
-# Chris's Entropy Library
+# Conditional Entropy Library
 
 ## Overview
 

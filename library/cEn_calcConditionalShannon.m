@@ -1,6 +1,8 @@
-function bits = cEn_calcConditionalShannon( dataseries, bins, exparams )
+function [ bits bitvar ] = ...
+  cEn_calcConditionalShannon( dataseries, bins, replicates, exparams )
 
-% function bits = cEn_calcConditionalShannon( dataseries, bins, exparams )
+% function [ bits bitvar ] = ...
+%   cEn_calcConditionalShannon( dataseries, bins, replicates, exparams )
 %
 % This calculates the conditional entropy associated with a set of signals.
 % This is the average amount of additional information that a sample from
@@ -17,12 +19,15 @@ function bits = cEn_calcConditionalShannon( dataseries, bins, exparams )
 %   scalar, it indicates how many bins to use for each channel's data. If
 %   it's a cell array, bins{chanidx} provides the list of edges used for
 %   binning each channel's data.
+% "replicates" is the number of bootstrapping proxies to use when estimating
+%   the uncertainty in the entropy. Use 1, 0, or NaN to disable bootstrapping.
 % "exparams" is a an optional structure containing extrapolation tuning
 %   parameters, per EXTRAPOLATION.txt. If this is empty, default parameters
 %   are used. If this is absent, no extrapolation is performed.
 %
 % "bits" is a scalar with the average additional entropy provided by an
 %   observation of Y, when all X_k are known.
+% "bitvar" is the estimated variance of "bits".
 
 
 % Use consistent bin definitions.
@@ -39,13 +44,17 @@ end
 % Wrap the binning and conditional entropy calculation functions.
 datafunc = @(funcdata) helper_calcConditionalShannon( funcdata, edges );
 
+% Add the extrapolation wrapper if desired.
+wrapfunc = datafunc;
 if exist('exparams', 'var')
   % We were given an extrapolation configuration; perform extrapolation.
-  bits = cEn_calcExtrapWrapper( dataseries, datafunc, exparams );
-else
-  % We were not given an extrapolation configuration; don't extrapolate.
-  bits = datafunc(dataseries);
+  wrapfunc = ...
+    @(funcdata) cEn_calcExtrapWrapper( dataseries, datafunc, exparams );
 end
+
+% Call the bootstrapping helper.
+[ bits scratch bitvar ] = ...
+  cEn_calcHelperBootstrap( dataseries, wrapfunc, replicates );
 
 
 % Done.

@@ -1,8 +1,8 @@
-function bits = ...
-  cEn_calcConditionalShannonFT( ftdata, chanlist, bins, exparams )
+function [ bits bitvar ] = cEn_calcConditionalShannonFT( ...
+  ftdata, chanlist, bins, replicates, exparams )
 
-% function bits = ...
-%   cEn_calcConditionalShannonFT( ftdata, chanlist, bins, exparams )
+% function [ bits bitvar ] = cEn_calcConditionalShannonFT( ...
+%   ftdata, chanlist, bins, replicates, exparams )
 %
 % This calculates the conditional entropy associated with a set of signals.
 % This is the average amount of additional information that a sample from
@@ -24,12 +24,15 @@ function bits = ...
 %   scalar, it indicates how many bins to use for each channel's data. If
 %   it's a cell array, bins{chanidx} provides the list of edges used for
 %   binning each channel's data.
+% "replicates" is the number of bootstrapping proxies to use when estimating
+%   the uncertainty in the entropy. Use 1, 0, or NaN to disable bootstrapping.
 % "exparams" is an optional structure containing extrapolation tuning
 %   parameters, per EXTRAPOLATION.txt. If this is empty, default parameters
 %   are used. If this is absent, no extrapolation is performed.
 %
 % "bits" is a scalar with the average additional entropy provided by an
 %   observation of Y, when all X_k are known.
+% "bitvar" is the estimated variance of "bits".
 
 
 % Extract a data series matrix from the Field Trip data.
@@ -37,9 +40,11 @@ dataseries = cEn_ftHelperConcatTrials( ftdata, chanlist );
 
 % Wrap the non-FT function.
 if exist('exparams', 'var')
-  bits = cEn_calcConditionalShannon( dataseries, bins, exparams );
+  [ bits bitvar ] = ...
+    cEn_calcConditionalShannon( dataseries, bins, replicates, exparams );
 else
-  bits = cEn_calcConditionalShannon( dataseries, bins );
+  [ bits bitvar ] = ...
+    cEn_calcConditionalShannon( dataseries, bins, replicates );
 end
 
 

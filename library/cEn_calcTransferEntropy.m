@@ -1,8 +1,8 @@
-function telist = ...
-  cEn_calcTransferEntropy( dataseries, laglist, bins, exparams )
+function [ telist tevars ] = ...
+  cEn_calcTransferEntropy( dataseries, laglist, bins, replicates, exparams )
 
-% function telist = ...
-%   cEn_calcTransferEntropy( dataseries, laglist, bins, exparams )
+% function [ telist tevars ] = ...
+%   cEn_calcTransferEntropy( dataseries, laglist, bins, replicates, exparams )
 %
 % This calculates the partial transfer entropy from signals X_1..X_k to
 % signal Y, for a specified set of time lags. If there is only one X, this
@@ -33,6 +33,14 @@ function telist = ...
 % histogram. This gets very big very quickly, and also needs a very large
 % number of samples to get good statistics.
 %
+% NOTE - To compute the estimated variance, we're adding the estimated
+% variance of the two H[|] terms in the equation above. This is only correct
+% if the two H[|] terms are independent RVs. They aren't, but if the
+% variance of one is very much larger than the variance of the other, it's
+% a close enough approximation. This should usually be the case, as one
+% histogram has higher dimensionality than the other (and so has fewer
+% elements per bin and much worse SNR for a given sample count).
+%
 % "dataseries" is a Nchans x Nsamples matrix or a cell array of length
 %   Nchans containing data series. The first series (chan = 1) is the
 %   destination signal Y; remaining series are source signals X_k. For cell
@@ -45,6 +53,9 @@ function telist = ...
 %   indicates how many bins to use for each channel's data. If it's a cell
 %   array, bins{chanidx} provides the list of edges used for binning each
 %   channel's data.
+% "replicates" is the number of bootstrapping proxies to use when estimating
+%   the uncertainty in transfer entropy. Use 1, 0, or NaN to disable
+%   bootstrapping.
 % "exparams" is an optional structure containing extrapolation tuning
 %   parameters, per EXTRAPOLATION.txt. If this is empty, default parameters
 %   are used. If this is absent, no extrapolation is performed.
@@ -52,6 +63,8 @@ function telist = ...
 % "telist" is a (Nchans-1,Nlags) matrix containing transfer entropy
 %   estimates from X_k (dataseries{k+1}) to Y (dataseries{1}) for each
 %   time lag.
+% "tevars" is a matrix containing the estimated variance of each element
+%   in "telist".
 
 
 % Convert matrix data into single-trial cell data.
@@ -101,6 +114,7 @@ end
 % Walk through the lag list, building partial TE estimates.
 
 telist = nan([ xcount, lagcount ]);
+tevars = telist;
 
 for lidx = 1:lagcount
 
@@ -130,12 +144,12 @@ for lidx = 1:lagcount
 
   if want_extrap
     % We were given an extrapolation configuration.
-    H_allpast = ...
-      cEn_calcConditionalShannon( datamatrix_allpast, bins_allpast, exparams );
+    [ H_allpast H_allpast_var ] = cEn_calcConditionalShannon( ...
+      datamatrix_allpast, bins_allpast, replicates, exparams );
   else
     % We were not given an extrapolation configuration.
-    H_allpast = ...
-      cEn_calcConditionalShannon( datamatrix_allpast, bins_allpast );
+    [ H_allpast H_allpast_var ] = cEn_calcConditionalShannon( ...
+      datamatrix_allpast, bins_allpast, replicates );
   end
 
 
@@ -159,18 +173,22 @@ for lidx = 1:lagcount
 
     if want_extrap
       % We were given an extrapolation configuration.
-      H_somepast = cEn_calcConditionalShannon( ...
-        datamatrix_somepast, bins_somepast, exparams );
+      [ H_somepast H_somepast_var ] = cEn_calcConditionalShannon( ...
+        datamatrix_somepast, bins_somepast, replicates, exparams );
     else
       % We were not given an extrapolation configuration.
-      H_somepast = ...
-        cEn_calcConditionalShannon( datamatrix_somepast, bins_somepast );
+      [ H_somepast H_somepast_var ] = cEn_calcConditionalShannon( ...
+        datamatrix_somepast, bins_somepast, replicates );
     end
 
 
     % Compute and store this transfer entropy value.
 
     telist(srcidx,lidx) = H_somepast - H_allpast;
+    % FIXME - Pretend that these are independent RVs.
+    % They aren't, but if H_allpast_var is much larger (it likely will be),
+    % this is still approximately correct.
+    tevars(srcidx,lidx) = H_somepast_var + H_allpast_var;
 
   end
 

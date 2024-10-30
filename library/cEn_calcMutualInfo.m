@@ -1,6 +1,8 @@
-function bits = cEn_calcMutualInfo( dataseries, bins, exparams )
+function [ bits bitvar ] = ...
+  cEn_calcMutualInfo( dataseries, bins, replicates, exparams )
 
-% function bits = cEn_calcMutualInfo( dataseries, bins, exparams )
+% function [ bits bitvar ] = ...
+%   cEn_calcMutualInfo( dataseries, bins, replicates, exparams )
 %
 % This calculates the mutual information associated with a set of signals.
 % This is the amount of information shared between the variables, as
@@ -17,12 +19,16 @@ function bits = cEn_calcMutualInfo( dataseries, bins, exparams )
 %   indicates how many bins to use for each channel's data. If it's a cell
 %   array, bins{chanidx} provides the list of edges used for binning each
 %   channel's data.
+% "replicates" is the number of bootstrapping proxies to use when estimating
+%   the uncertainty in mutual information. Use 1, 0, or NaN to disable
+%   bootstrapping.
 % "exparams" is an optional structure containing extrapolation tuning
 %   parameters, per EXTRAPOLATION.txt. If this is empty, default parameters
 %   are used. If this is absent, no extrapolation is performed.
 %
 % "bits" is a scalar with the mutual information, computed as the reduction
 %   in information content vs the joint distribution of independent variables.
+% "bitvar" is the estimated variance of "bits".
 
 
 % Use consistent bin definitions.
@@ -39,13 +45,17 @@ end
 % Wrap the binning and mutual information calculation functions.
 datafunc = @(funcdata) helper_calcMutualInfo( funcdata, edges );
 
+% Add the extrapolation wrapper if desired.
+wrapfunc = datafunc;
 if exist('exparams', 'var')
   % We were given an extrapolation configuration; perform extrapolation.
-  bits = cEn_calcExtrapWrapper( dataseries, datafunc, exparams );
-else
-  % We were not given an extrapolation configuration; don't extrapolate.
-  bits = datafunc(dataseries);
+  wrapfunc = ...
+    @(funcdata) cEn_calcExtrapWrapper( dataseries, datafunc, exparams );
 end
+
+% Call the bootstrapping helper.
+[ bits scratch bitvar ] = ...
+  cEn_calcHelperBootstrap( dataseries, wrapfunc, replicates );
 
 
 % Done.

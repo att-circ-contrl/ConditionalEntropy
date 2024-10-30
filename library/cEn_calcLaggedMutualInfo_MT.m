@@ -1,8 +1,8 @@
-function milist = ...
-  cEn_calcLaggedMutualInfo_MT( dataseries, laglist, bins, exparams)
+function [ milist mivars ] = cEn_calcLaggedMutualInfo_MT( ...
+  dataseries, laglist, bins, replicates, exparams)
 
-% function milist = ...
-%   cEn_calcLaggedMutualInfo_MT( dataseries, laglist, bins, exparams)
+% function [ milist mivars ] = cEn_calcLaggedMutualInfo_MT( ...
+%   dataseries, laglist, bins, replicates, exparams)
 %
 % This calculates the mutual information between a destination signal and
 % time-lagged source signals. This is the amount of information shared
@@ -31,12 +31,17 @@ function milist = ...
 %   indicates how many bins to use for each channel's data. If it's a cell
 %   array, bins{chanidx} provides the list of edges used for binning each
 %   channel's data.
+% "replicates" is the number of bootstrapping proxies to use when estimating
+%   the uncertainty in mutual information. Use 1, 0, or NaN to disable
+%   bootstrapping.
 % "exparams" is an optional structure containing extrapolation tuning
 %   parameters, per EXTRAPOLATION.txt. If this is empty, default parameters
 %   are used. If this is absent, no extrapolation is performed.
 %
 % "milist" is a vector with the same dimensions as laglist containing
 %   mutual information estimates for each time lag.
+% "mivars" is a vector containing the estimated variance of each element
+%   in "milist".
 
 
 % Metadata.
@@ -54,6 +59,7 @@ lagcount = length(laglist);
 % Iterate in parallel.
 
 milist = nan(size(laglist));
+mivars = milist;
 
 parfor lidx = 1:lagcount
 
@@ -61,12 +67,16 @@ parfor lidx = 1:lagcount
 
   if want_extrap
     % We were given an extrapolation configuration.
-    milist(lidx) = ...
-      cEn_calcLaggedMutualInfo( dataseries, thislag, bins, exparams );
+    [ thismi thisvar ] = cEn_calcLaggedMutualInfo( ...
+      dataseries, thislag, bins, replicates, exparams );
+    milist(lidx) = thismi;
+    mivars(lidx) = thisvar;
   else
     % We were not given an extrapolation configuration.
-    milist(lidx) = ...
-      cEn_calcLaggedMutualInfo( dataseries, thislag, bins );
+    [ thismi thisvar ] = cEn_calcLaggedMutualInfo( ...
+      dataseries, thislag, bins, replicates );
+    milist(lidx) = thismi;
+    mivars(lidx) = thisvar;
   end
 
 end

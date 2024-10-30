@@ -1,8 +1,8 @@
-function telist = ...
-  cEn_calcTransferEntropyFT( ftdata, chanlist, laglist, bins, exparams )
+function [ telist tevars ] = cEn_calcTransferEntropyFT( ...
+  ftdata, chanlist, laglist, bins, replicates, exparams )
 
-% function telist = ...
-%   cEn_calcTransferEntropyFT( ftdata, chanlist, laglist, bins, exparams )
+% function [ telist tevars ] = cEn_calcTransferEntropyFT( ...
+%   ftdata, chanlist, laglist, bins, replicates, exparams )
 %
 % This calculates the partial transfer entropy from signals X_1..X_k to
 % signal Y, for a specified set of time lags. If there is only one X, this
@@ -47,6 +47,9 @@ function telist = ...
 %   indicates how many bins to use for each channel's data. If it's a cell
 %   array, bins{chanidx} provides the list of edges used for binning each
 %   channel's data.
+% "replicates" is the number of bootstrapping proxies to use when estimating
+%   the uncertainty in transfer entropy. Use 1, 0, or NaN to disable
+%   bootstrapping.
 % "exparams" is an optional structure containing extrapolation tuning
 %   parameters, per EXTRAPOLATION.txt. If this is empty, default parameters
 %   are used. If this is absent, no extrapolation is performed.
@@ -54,6 +57,8 @@ function telist = ...
 % "telist" is a (Nchans-1,Nlags) matrix containing transfer entropy
 %   estimates from X_k (dataseries{k+1}) to Y (dataseries{1}) for each
 %   time lag.
+% "tevars" is a matrix containing the estimated variance of each element
+%   in "telist".
 
 
 % Metadata.
@@ -75,10 +80,12 @@ end
 
 if want_extrap
   % We were given an extrapolation configuration.
-  telist = cEn_calcTransferEntropy( dataseries, laglist, bins, exparams );
+  [ telist tevars ] = ...
+    cEn_calcTransferEntropy( dataseries, laglist, bins, replicates, exparams );
 else
   % We were not given an extrapolation configuration.
-  telist = cEn_calcTransferEntropy( dataseries, laglist, bins );
+  [ telist tevars ] = ...
+    cEn_calcTransferEntropy( dataseries, laglist, bins, replicates );
 end
 
 

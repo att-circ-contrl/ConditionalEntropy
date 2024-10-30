@@ -11,11 +11,21 @@ want_parallel = false;
 swept_histbins = [ 8 16 32 ];
 
 % 30k takes a minute or two. Higher counts are more informative.
-swept_sampcounts = [ 3000 10000 30000 ];
-%swept_sampcounts = [ 1000 swept_sampcounts ];
+swept_sampcounts = [ 3000 10000 ];
+swept_sampcounts = [ swept_sampcounts 30000 ];
+swept_sampcounts = [ 1000 swept_sampcounts ];
 %swept_sampcounts = [ swept_sampcounts 100000 ];
 %swept_sampcounts = [ swept_sampcounts 300000 ];
 %swept_sampcounts = [ swept_sampcounts 1000000 ];
+
+% This slows down computation by a factor of N to estimate variance.
+if false
+  replicates_mi = 30;
+  replicates_te = 10;
+else
+  replicates_mi = 1;
+  replicates_te = 1;
+end
 
 laglist = [ -15:15 ];
 test_lag = 6;
@@ -51,6 +61,11 @@ mutualbits_strong = mutualbits_weak;
 mutualbits_extrap = mutualbits_weak;
 mutualbits_3ch = mutualbits_weak;
 
+mutualvars_weak = mutualbits_weak;
+mutualvars_strong = mutualbits_weak;
+mutualvars_extrap = mutualbits_weak;
+mutualvars_3ch = mutualbits_weak;
+
 mutualbits_lagged_st = ...
   nan([ length(laglist), length(swept_sampcounts), length(swept_histbins) ]);
 mutualbits_lagged_wk = mutualbits_lagged_st;
@@ -58,13 +73,26 @@ mutualbits_discrete = mutualbits_lagged_st;
 mutualbits_discrete_auto = ...
   nan([ length(laglist), length(swept_sampcounts), 1 ]);
 
+mutualvars_lagged_st = mutualbits_lagged_st;
+mutualvars_lagged_wk = mutualbits_lagged_st;
+mutualvars_discrete = mutualbits_lagged_st;
+mutualvars_discrete_auto = mutualbits_discrete_auto;
+
 transferbits_st = mutualbits_lagged_st;
 transferbits_wk = mutualbits_lagged_st;
 transferbits_discrete = mutualbits_lagged_st;
 transferbits_discrete_auto = mutualbits_discrete_auto;
 
+transfervars_st = mutualbits_lagged_st;
+transfervars_wk = mutualbits_lagged_st;
+transfervars_discrete = mutualbits_lagged_st;
+transfervars_discrete_auto = mutualbits_discrete_auto;
+
 ptebits_st = mutualbits_lagged_st;
 ptebits_wk = mutualbits_lagged_st;
+
+ptevars_st = mutualbits_lagged_st;
+ptevars_wk = mutualbits_lagged_st;
 
 
 % Iterate sample counts.
@@ -92,8 +120,8 @@ for sidx = 1:length(swept_sampcounts)
   datamatrix_weak = [ signalY ; signalXwk ];
   datamatrix_3ch = [ signalY ; signalXst ; signalXwk ];
 
-  datamatrix_lagged_st = [ signalY ; circshift( signalXst, test_lag ) ];
-  datamatrix_lagged_wk = [ signalY ; circshift( signalXwk, test_lag ) ];
+  datamatrix_lagged_st = [ signalY ; circshift( signalXst, -test_lag ) ];
+  datamatrix_lagged_wk = [ signalY ; circshift( signalXwk, -test_lag ) ];
   datamatrix_3ch_lagged = ...
     [ signalY ; circshift( signalXst, test_lag ) ; ...
       circshift( signalXwk, test_lag ) ];
@@ -105,7 +133,7 @@ for sidx = 1:length(swept_sampcounts)
   discreteY = discreteData + discreteN1;
   discreteX = discreteData + discreteN2;
 
-  datamatrix_discrete = [ discreteY ; circshift( discreteX, test_lag ) ];
+  datamatrix_discrete = [ discreteY ; circshift( discreteX, -test_lag ) ];
 
 
   % Plot the signals for one sample count, to show what they're like.
@@ -154,25 +182,26 @@ for sidx = 1:length(swept_sampcounts)
 
     % Calculate mutual information without extrapolation.
 
-    mutualbits_weak( sidx, bidx ) = ...
-      cEn_calcMutualInfo( datamatrix_weak, histbins );
-    mutualbits_strong( sidx, bidx ) = ...
-      cEn_calcMutualInfo( datamatrix_strong, histbins );
+    [ mutualbits_weak( sidx, bidx ), mutualvars_weak( sidx, bidx ) ]= ...
+      cEn_calcMutualInfo( datamatrix_weak, histbins, replicates_mi );
+    [ mutualbits_strong( sidx, bidx ), mutualvars_strong( sidx, bidx ) ] = ...
+      cEn_calcMutualInfo( datamatrix_strong, histbins, replicates_mi );
 
 
     % Calculate it again for the "weak" case, using extrapolation.
     % Do this by adding an extrapolation parameter structure as the last
     % argument. An empty structure gets filled with default settings.
-    mutualbits_extrap( sidx, bidx ) = ...
-      cEn_calcMutualInfo( datamatrix_weak, histbins, struct() );
+
+    [ mutualbits_extrap( sidx, bidx ), mutualvars_extrap( sidx, bidx ) ] = ...
+      cEn_calcMutualInfo( datamatrix_weak, histbins, replicates_mi, struct() );
 
 
     % Calculate 3-channel mutual information using a Field Trip structure.
     % No extrapolation.
     % Give it an empty channel list to say "use all channels".
 
-    mutualbits_3ch( sidx, bidx ) = ...
-      cEn_calcMutualInfoFT( ftdata_3ch, {}, histbins );
+    [ mutualbits_3ch( sidx, bidx ), mutualvars_3ch( sidx, bidx ) ] = ...
+      cEn_calcMutualInfoFT( ftdata_3ch, {}, histbins, replicates_mi );
 
   end
 
@@ -196,21 +225,35 @@ for sidx = 1:length(swept_sampcounts)
     % Results are similar to above: It converges faster but isn't monotonic.
 
     if want_parallel
-      mutualbits_lagged_st(:, sidx, bidx) = cEn_calcLaggedMutualInfo_MT( ...
-        datamatrix_lagged_st, laglist, histbins );
-      mutualbits_lagged_wk(:, sidx, bidx) = cEn_calcLaggedMutualInfo_MT( ...
-        datamatrix_lagged_wk, laglist, histbins );
+      [ mutualbits_lagged_st(:, sidx, bidx), ...
+        mutualvars_lagged_st(:, sidx, bidx ) ] = ...
+        cEn_calcLaggedMutualInfo_MT( ...
+          datamatrix_lagged_st, laglist, histbins, replicates_mi );
 
-      mutualbits_discrete(:, sidx, bidx) = cEn_calcLaggedMutualInfo_MT( ...
-        datamatrix_discrete, laglist, histbins );
+      [ mutualbits_lagged_wk(:, sidx, bidx), ...
+        mutualvars_lagged_wk(:, sidx, bidx ) ] = ...
+        cEn_calcLaggedMutualInfo_MT( ...
+          datamatrix_lagged_wk, laglist, histbins, replicates_mi );
+
+      [ mutualbits_discrete(:, sidx, bidx), ...
+        mutualvars_discrete(:, sidx, bidx ) ] = ...
+        cEn_calcLaggedMutualInfo_MT( ...
+          datamatrix_discrete, laglist, histbins, replicates_mi );
     else
-      mutualbits_lagged_st(:, sidx, bidx) = cEn_calcLaggedMutualInfo( ...
-        datamatrix_lagged_st, laglist, histbins );
-      mutualbits_lagged_wk(:, sidx, bidx) = cEn_calcLaggedMutualInfo( ...
-        datamatrix_lagged_wk, laglist, histbins );
+      [ mutualbits_lagged_st(:, sidx, bidx), ...
+        mutualvars_lagged_st(:, sidx, bidx ) ] = ...
+        cEn_calcLaggedMutualInfo( ...
+          datamatrix_lagged_st, laglist, histbins, replicates_mi );
 
-      mutualbits_discrete(:, sidx, bidx) = cEn_calcLaggedMutualInfo( ...
-        datamatrix_discrete, laglist, histbins );
+      [ mutualbits_lagged_wk(:, sidx, bidx), ...
+        mutualvars_lagged_wk(:, sidx, bidx ) ] = ...
+        cEn_calcLaggedMutualInfo( ...
+          datamatrix_lagged_wk, laglist, histbins, replicates_mi );
+
+      [ mutualbits_discrete(:, sidx, bidx), ...
+        mutualvars_discrete(:, sidx, bidx ) ] = ...
+        cEn_calcLaggedMutualInfo( ...
+          datamatrix_discrete, laglist, histbins, replicates_mi );
     end
 
   end
@@ -229,11 +272,13 @@ for sidx = 1:length(swept_sampcounts)
   disp(thismsg);
 
   if want_parallel
-    mutualbits_discrete_auto(:,sidx,1) = cEn_calcLaggedMutualInfo_MT( ...
-      datamatrix_discrete, laglist, histbins );
+    [ mutualbits_discrete_auto(:,sidx,1), ...
+      mutualvars_discrete_auto(:,sidx,1) ] = cEn_calcLaggedMutualInfo_MT( ...
+      datamatrix_discrete, laglist, histbins, replicates_mi );
   else
-    mutualbits_discrete_auto(:,sidx,1) = cEn_calcLaggedMutualInfo( ...
-      datamatrix_discrete, laglist, histbins );
+    [ mutualbits_discrete_auto(:,sidx,1), ...
+      mutualvars_discrete_auto(:,sidx,1) ] = cEn_calcLaggedMutualInfo( ...
+      datamatrix_discrete, laglist, histbins, replicates_mi );
   end
 
   % Progress report.
@@ -255,21 +300,31 @@ for sidx = 1:length(swept_sampcounts)
     % Results are similar to above: It converges faster but isn't monotonic.
 
     if want_parallel
-      transferbits_st(:, sidx, bidx) = cEn_calcTransferEntropy_MT( ...
-        datamatrix_lagged_st, laglist, histbins );
-      transferbits_wk(:, sidx, bidx) = cEn_calcTransferEntropy_MT( ...
-        datamatrix_lagged_wk, laglist, histbins );
+      [ transferbits_st(:, sidx, bidx), ...
+        transfervars_st(:, sidx, bidx) ] = cEn_calcTransferEntropy_MT( ...
+        datamatrix_lagged_st, laglist, histbins, replicates_te );
 
-      transferbits_discrete(:, sidx, bidx) = cEn_calcTransferEntropy_MT( ...
-        datamatrix_discrete, laglist, histbins );
+      [ transferbits_wk(:, sidx, bidx), ...
+        transfervars_wk(:, sidx, bidx) ] = cEn_calcTransferEntropy_MT( ...
+        datamatrix_lagged_wk, laglist, histbins, replicates_te );
+
+      [ transferbits_discrete(:, sidx, bidx), ...
+        transfervars_discrete(:, sidx, bidx) ] = ...
+        cEn_calcTransferEntropy_MT( ...
+          datamatrix_discrete, laglist, histbins, replicates_te );
     else
-      transferbits_st(:, sidx, bidx) = cEn_calcTransferEntropy( ...
-        datamatrix_lagged_st, laglist, histbins );
-      transferbits_wk(:, sidx, bidx) = cEn_calcTransferEntropy( ...
-        datamatrix_lagged_wk, laglist, histbins );
+      [ transferbits_st(:, sidx, bidx), ...
+        transfervars_st(:, sidx, bidx) ] = cEn_calcTransferEntropy( ...
+        datamatrix_lagged_st, laglist, histbins, replicates_te );
 
-      transferbits_discrete(:, sidx, bidx) = cEn_calcTransferEntropy( ...
-        datamatrix_discrete, laglist, histbins );
+      [ transferbits_wk(:, sidx, bidx), ...
+        transfervars_wk(:, sidx, bidx) ] = cEn_calcTransferEntropy( ...
+        datamatrix_lagged_wk, laglist, histbins, replicates_te );
+
+      [ transferbits_discrete(:, sidx, bidx), ...
+        transfervars_discrete(:, sidx, bidx) ] = ...
+        cEn_calcTransferEntropy( ...
+          datamatrix_discrete, laglist, histbins, replicates_te );
     end
 
   end
@@ -280,11 +335,13 @@ for sidx = 1:length(swept_sampcounts)
   histbins = cEn_getMultivariateHistBinsDiscrete( datamatrix_discrete );
 
   if want_parallel
-    transferbits_discrete_auto(:,sidx,1) = cEn_calcTransferEntropy_MT( ...
-      datamatrix_discrete, laglist, histbins );
+    [ transferbits_discrete_auto(:,sidx,1), ...
+      transferbits_discrete_auto(:,sidx,1) ] = cEn_calcTransferEntropy_MT( ...
+      datamatrix_discrete, laglist, histbins, replicates_te );
   else
-    transferbits_discrete_auto(:,sidx,1) = cEn_calcTransferEntropy( ...
-      datamatrix_discrete, laglist, histbins );
+    [ transferbits_discrete_auto(:,sidx,1), ...
+      transferbits_discrete_auto(:,sidx,1) ] = cEn_calcTransferEntropy( ...
+      datamatrix_discrete, laglist, histbins, replicates_te );
   end
 
   % Progress report.
@@ -310,15 +367,21 @@ for sidx = 1:length(swept_sampcounts)
     % indices. If we give {} or [], it means "use all channels".
 
     if want_parallel
-      ptedata = cEn_calcTransferEntropyFT_MT( ...
-        ftdata_3ch_lagged, { 'chY', 'chXst', 'chXwk' }, laglist, histbins );
+      [ ptedata ptedata_var ] = cEn_calcTransferEntropyFT_MT( ...
+        ftdata_3ch_lagged, { 'chY', 'chXst', 'chXwk' }, ...
+        laglist, histbins, replicates_te );
       ptebits_st( :, sidx, bidx ) = ptedata(1,:);
       ptebits_wk( :, sidx, bidx ) = ptedata(2,:);
+      ptevars_st( :, sidx, bidx ) = ptedata_var(1,:);
+      ptevars_wk( :, sidx, bidx ) = ptedata_var(2,:);
     else
-      ptedata = cEn_calcTransferEntropyFT( ...
-        ftdata_3ch_lagged, { 'chY', 'chXst', 'chXwk' }, laglist, histbins );
+      [ ptedata ptedata_var ] = cEn_calcTransferEntropyFT( ...
+        ftdata_3ch_lagged, { 'chY', 'chXst', 'chXwk' }, ...
+        laglist, histbins, replicates_te );
       ptebits_st( :, sidx, bidx ) = ptedata(1,:);
       ptebits_wk( :, sidx, bidx ) = ptedata(2,:);
+      ptevars_st( :, sidx, bidx ) = ptedata_var(1,:);
+      ptevars_wk( :, sidx, bidx ) = ptedata_var(2,:);
     end
 
   end

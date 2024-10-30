@@ -1,8 +1,8 @@
-function telist = ...
-  cEn_calcTransferEntropy_MT( dataseries, laglist, bins, exparams )
+function [ telist tevars ] = cEn_calcTransferEntropy_MT( ...
+  dataseries, laglist, bins, replicates, exparams )
 
-% function telist = ...
-%   cEn_calcTransferEntropy_MT( dataseries, laglist, bins, exparams )
+% function [ telist tevars ] = cEn_calcTransferEntropy_MT( ...
+%   dataseries, laglist, bins, replicates, exparams )
 %
 % This is a wrapper for cEn_calcTransferEntropy() that tests different lags
 % in parallel with each other. This requires the Parallel Computing Toolbox.
@@ -48,6 +48,9 @@ function telist = ...
 %   indicates how many bins to use for each channel's data. If it's a cell
 %   array, bins{chanidx} provides the list of edges used for binning each
 %   channel's data.
+% "replicates" is the number of bootstrapping proxies to use when estimating
+%   the uncertainty in transfer entropy. Use 1, 0, or NaN to disable
+%   bootstrapping.
 % "exparams" is an optional structure containing extrapolation tuning
 %   parameters, per EXTRAPOLATION.txt. If this is empty, default parameters
 %   are used. If this is absent, no extrapolation is performed.
@@ -55,6 +58,8 @@ function telist = ...
 % "telist" is a (Nchans-1,Nlags) matrix containing transfer entropy
 %   estimates from X_k (dataseries{k+1}) to Y (dataseries{1}) for each
 %   time lag.
+% "tevars" is a matrix containing the estimated variance of each element
+%   in "telist".
 
 
 % Convert matrix data into single-trial cell data.
@@ -86,17 +91,22 @@ lagcount = length(laglist);
 % Iterate in parallel.
 
 telistbylag = {};
+tevarsbylag = {};
 
 parfor lidx = 1:lagcount
 
   if want_extrap
     % We were given an extrapolation configuration.
-    telistbylag{lidx} = ...
-      cEn_calcTransferEntropy( dataseries, laglist(lidx), bins, exparams );
+    [ thistelist thistevars ] = cEn_calcTransferEntropy( ...
+      dataseries, laglist(lidx), bins, replicates, exparams );
+    telistbylag{lidx} = thistelist;
+    tevarsbylag{lidx} = thistevars;
   else
     % We were not given an extrapolation configuration.
-    telistbylag{lidx} = ...
-      cEn_calcTransferEntropy( dataseries, laglist(lidx), bins );
+    [ thistelist thistevars ] = cEn_calcTransferEntropy( ...
+      dataseries, laglist(lidx), bins, replicates );
+    telistbylag{lidx} = thistelist;
+    tevarsbylag{lidx} = thistevars;
   end
 
 end
@@ -105,9 +115,11 @@ end
 % Copy the output.
 
 telist = nan([ xcount, lagcount ]);
+tevars = telist;
 
 for lidx = 1:lagcount
   telist(:,lidx) = telistbylag{lidx}(:,1);
+  tevars(:,lidx) = tevarsbylag{lidx}(:,1);
 end
 
 

@@ -1,6 +1,6 @@
-function bits = cEn_calcShannon( dataseries, bins )
+function [ bits bitvar ] = cEn_calcShannon( dataseries, bins, replicates )
 
-% function bits = cEn_calcShannon( dataseries, bins )
+% function [ bits bitvar ] = cEn_calcShannon( dataseries, bins, replicates )
 %
 % This calculates the total Shannon entropy associated with a signal.
 % This is the average number of bits of information that you get from seeing
@@ -16,8 +16,12 @@ function bits = cEn_calcShannon( dataseries, bins )
 % "dataseries" is the signal to evaluate.
 % "bins" is a scalar (to generate uniform histogram bins) or a vector
 %   (to specify histogram bin edges).
+% "replicates" is the number of bootstrapping proxies to use when estimating
+%   the uncertainty in the entropy. Use 1, 0, or NaN to disable bootstrapping.
 %
 % "bits" is a scalar with the average Shannon entropy of an observation.
+% "bitvar" is the estimated variance of "bits".
+
 
 dataseries = reshape( dataseries, 1, [] );
 
@@ -27,12 +31,24 @@ else
   binedges = linspace( min(dataseries), max(dataseries), bins );
 end
 
-[ bincounts scratch ] = histcounts( dataseries, binedges );
+datafunc = @(funcdata) helper_calcShannon( funcdata, binedges );
 
-bits = cEn_calcShannonHist( bincounts );
+% Call the bootstrapping helper.
+[ bits scratch bitvar ] = ...
+  cEn_calcHelperBootstrap( dataseries, datafunc, replicates );
 
 
 % Done.
+end
+
+
+
+%
+% Helper Functions
+
+function thisentropy = helper_calcShannon( rawdata, edges )
+  [ bincounts scratch ] = histcounts( rawdata, edges );
+  thisentropy = cEn_calcShannonHist( bincounts );
 end
 
 

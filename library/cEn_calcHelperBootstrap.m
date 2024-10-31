@@ -24,7 +24,7 @@ function [ trueval proxmean proxvar ] = ...
 % "proxmean" is the mean of the data function's output across all proxy
 %   inputs, or "trueval" if bootstrapping was not performed.
 % "proxvar" is the variance of the data function's output across all proxy
-%   inputs, or 0 if bootstrapping was not performed.
+%   inputs, or NaN if bootstrapping was not performed.
 
 
 % Calculate the true output no matter what.
@@ -32,7 +32,7 @@ trueval = datafunc(dataseries);
 
 % Initialize proxy output to default values.
 proxmean = trueval;
-proxvar = 0 * trueval;
+proxvar = nan(size( trueval ));
 
 
 % If we want bootstrapping, build proxies and collect statistics.

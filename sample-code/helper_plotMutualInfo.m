@@ -1,8 +1,8 @@
-function helper_plotMutualInfo( datavals, sampcountlist, histbinlist, ...
-  axistitle, figtitle, fname )
+function helper_plotMutualInfo( datavals, dataval_vars, ...
+  sampcountlist, histbinlist, axistitle, figtitle, fname )
 
-% function helper_plotMutualInfo( datavals, sampcountlist, histbinlist, ...
-%   axistitle, figtitle, fname )
+% function helper_plotMutualInfo( datavals, dataval_vars, ...
+%   sampcountlist, histbinlist, axistitle, figtitle, fname )
 %
 % This plots estimates of mutual information.
 % This generates one plot per data case, with one curve per bin count,
@@ -10,6 +10,8 @@ function helper_plotMutualInfo( datavals, sampcountlist, histbinlist, ...
 %
 % "datavals" is a matrix of size Nsampcounts x Nhistbins, containing data
 %   to be plotted.
+% "dataval_vars" is a matrix containing the estimated variance of each
+%   element of "datavals".
 % "sampcountlist" is a vector containing sample counts.
 % "histbinlist" is a vector containing histogram bin counts.
 % "axistitle" is a character vector with the Y axis title.
@@ -43,21 +45,51 @@ clf('reset');
 
 hold on;
 
+% Plot values without confidence intervals first.
+% Build the palette lookup table while we do this.
+
+palette = {};
+
 for bidx = 1:length(histbinlist)
   thisdata = datavals(:,bidx);
   thisdata = reshape(thisdata, size(sampcountlist));
 
   if isnan(histbinlist(bidx))
-    plot( sampcountlist, thisdata, ...
+    thisline = plot( sampcountlist, thisdata, ...
       'DisplayName', 'auto bins' );
   else
-    plot( sampcountlist, thisdata, ...
+    thisline = plot( sampcountlist, thisdata, ...
       'DisplayName', sprintf('%d bins', histbinlist(bidx)) );
   end
+
+  palette{bidx} = thisline.Color;
 end
 
+
+% Plot axis.
 plot( sampcountlist, zeros(size(sampcountlist)), ...
   'HandleVisibility', 'off', 'Color', [ 0.5 0.5 0.5 ] );
+
+
+% Plot confidence intervals.
+
+for bidx = 1:length(histbinlist)
+  thisdata = datavals(:,bidx);
+  thisdata = reshape(thisdata, size(sampcountlist));
+
+  thisconf = dataval_vars(:,bidx);
+  thisconf = reshape(thisconf, size(sampcountlist));
+
+  % Convert variance to 2-sigma.
+  thisconf = 2 * sqrt(thisconf);
+
+  plot( sampcountlist, thisdata + thisconf, '--', ...
+    'HandleVisibility', 'off', 'Color', palette{bidx} );
+
+  plot( sampcountlist, thisdata - thisconf, '--', ...
+    'HandleVisibility', 'off', 'Color', palette{bidx} );
+end
+
 
 hold off;
 

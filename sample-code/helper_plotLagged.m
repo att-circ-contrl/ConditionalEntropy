@@ -1,9 +1,9 @@
 function helper_plotLagged( ...
-  datavals, laglist, testlag, sampcountlist, histbinlist, ...
+  datavals, dataval_vars, laglist, testlag, sampcountlist, histbinlist, ...
   axistitle, titleprefix, filepattern, squashflag )
 
 % function helper_plotLagged( ...
-%   datavals, laglist, testlag, sampcountlist, histbinlist, ...
+%   datavals, dataval_vars, laglist, testlag, sampcountlist, histbinlist, ...
 %   axistitle, titleprefix, filepattern, squashflag )
 %
 % This generates two types of plot for measures that are functions of time
@@ -18,6 +18,8 @@ function helper_plotLagged( ...
 %
 % "datavals" is a matrix of size Nlags x Nsampcounts x Nhistbins, containing
 %   containing the data measure (mutual information or transfer entropy).
+% "dataval_vars" is a matrix containing the estimated variance of each
+%   element of "datavals".
 % "laglist" is a vector containing time lags (in samples).
 % "testlag" is a scalar with a time lag to use for the single-lag plot.
 % "sampcountlist" is a vector containing sample counts.
@@ -89,6 +91,11 @@ for bidx = 1:bincount
 
   hold on;
 
+  % Plot without confidence intervals first.
+  % Build the palette lookup table while we do this.
+
+  palette = {};
+
   for sidx = 1:sizecount
     thisdata = datavals(:,sidx,bidx);
     thisdata = reshape(thisdata, size(laglist));
@@ -99,12 +106,44 @@ for bidx = 1:bincount
       thisdata(squashmask) = NaN;
     end
 
-    plot( laglist, thisdata, 'DisplayName', ...
+    thisline = plot( laglist, thisdata, 'DisplayName', ...
       sprintf('%d samples', sampcountlist(sidx)) );
+
+    palette{sidx} = thisline.Color;
   end
 
+
+  % Plot axis.
   plot( laglist, zeros(size(laglist)), 'HandleVisibility', 'off', ...
     'Color', [ 0.5 0.5 0.5 ] );
+
+
+  % Plot confidence intervals.
+
+  for sidx = 1:sizecount
+    thisdata = datavals(:,sidx,bidx);
+    thisdata = reshape(thisdata, size(laglist));
+
+    thisconf = dataval_vars(:,sidx,bidx);
+    thisconf = reshape(thisconf, size(laglist));
+
+    % Convert variance to 2-sigma.
+    thisconf = 2 * sqrt(thisconf);
+
+    if want_squash
+      % NOTE - Squash "lag = 0". It's always zero for transfer entropy.
+      squashmask = ( abs(laglist) < 0.5 );
+      thisdata(squashmask) = NaN;
+      thisconf(squashmask) = NaN;
+    end
+
+    plot( laglist, thisdata + thisconf, '--', ...
+      'HandleVisibility', 'off', 'Color', palette{sidx} );
+
+    plot( laglist, thisdata - thisconf, '--', ...
+      'HandleVisibility', 'off', 'Color', palette{sidx} );
+  end
+
 
   hold off;
 
@@ -145,20 +184,50 @@ clf('reset');
 
 hold on;
 
+% Plot without confidence intervals first.
+% Build the palette lookup table while we do this.
+
+palette = {};
+
 for bidx = 1:bincount
   thisdata = datavals(testlagidx,:,bidx);
   thisdata = reshape(thisdata, size(sampcountlist));
 
   if isnan(histbinlist(bidx))
-    plot( sampcountlist, thisdata, 'DisplayName', 'auto bins' );
+    thisline = plot( sampcountlist, thisdata, 'DisplayName', 'auto bins' );
   else
-    plot( sampcountlist, thisdata, 'DisplayName', ...
+    thisline = plot( sampcountlist, thisdata, 'DisplayName', ...
       sprintf('%d bins', histbinlist(bidx)) );
   end
+
+  palette{bidx} = thisline.Color;
 end
 
+
+% Plot axis.
 plot( sampcountlist, zeros(size(sampcountlist)), ...
   'HandleVisibility', 'off', 'Color', [ 0.5 0.5 0.5 ] );
+
+
+% Plot confidence intervals.
+
+for bidx = 1:bincount
+  thisdata = datavals(testlagidx,:,bidx);
+  thisdata = reshape(thisdata, size(sampcountlist));
+
+  thisconf = dataval_vars(testlagidx,:,bidx);
+  thisconf = reshape(thisconf, size(sampcountlist));
+
+  % Convert variance to 2-sigma.
+  thisconf = 2 * sqrt(thisconf);
+
+  plot( sampcountlist, thisdata + thisconf, '--', ...
+    'HandleVisibility', 'off', 'Color', palette{bidx} );
+
+  plot( sampcountlist, thisdata - thisconf, '--', ...
+    'HandleVisibility', 'off', 'Color', palette{bidx} );
+end
+
 
 hold off;
 

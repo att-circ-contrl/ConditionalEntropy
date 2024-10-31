@@ -29,6 +29,9 @@ function [ datasets_2ch datasets_3ch ] = ...
 % Make note of whether we're continuous or discrete.
 isdiscrete = strcmp(signaltype, 'counts');
 
+% FIXME - Correct old vs new shift convention.
+samp_shift = - samp_shift;
+
 
 % Make several uncorrelated noise series. One of them's our "signal".
 

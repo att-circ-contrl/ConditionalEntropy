@@ -24,6 +24,8 @@ want_test_ft = false;
 
 want_plot_signals = false;
 
+want_replicates = false;
+
 
 %
 % Geometry.
@@ -45,6 +47,11 @@ swept_sampcounts = [ swept_sampcounts 30000 ];
 %swept_sampcounts = [ swept_sampcounts 3000000 10000000 ];
 
 ft_trials = 10;
+
+replicates = 1;
+if want_replicates
+  replicates = 3;
+end
 
 
 %

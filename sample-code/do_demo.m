@@ -78,6 +78,17 @@ mutualvars_lagged_wk = mutualbits_lagged_st;
 mutualvars_discrete = mutualbits_lagged_st;
 mutualvars_discrete_auto = mutualbits_discrete_auto;
 
+
+% Remember that the correlation coefficient doesn't need histogram bins.
+pcorr_st = mutualbits_discrete_auto;
+pcorr_wk = pcorr_st;
+pcorr_discrete = pcorr_st;
+
+pcvars_st = pcorr_st;
+pcvars_wk = pcorr_st;
+pcvars_discrete = pcorr_st;
+
+
 transferbits_st = mutualbits_lagged_st;
 transferbits_wk = mutualbits_lagged_st;
 transferbits_discrete = mutualbits_lagged_st;
@@ -288,6 +299,34 @@ for sidx = 1:length(swept_sampcounts)
 
 
   %
+  % Compute time-lagged Pearson's correlation.
+  % This can be used as a proxy for mutual information; for Gaussian RVs,
+  % I(X,Y) = - (1/2) log( 1 - r^2 ).
+
+  tic;
+
+  % This doesn't use histogram bins.
+
+  if want_parallel
+% FIXME - NYI.
+  else
+    [ pcorr_st(:,sidx,1), pcvars_st(:,sidx,1) ] = ...
+      cEn_calcLaggedPCorr( datamatrix_lagged_st, laglist, replicates_mi );
+
+    [ pcorr_wk(:,sidx,1), pcvars_wk(:,sidx,1) ] = ...
+      cEn_calcLaggedPCorr( datamatrix_lagged_wk, laglist, replicates_mi );
+
+    [ pcorr_discrete(:,sidx,1), pcvars_discrete(:,sidx,1) ] = ...
+      cEn_calcLaggedPCorr( datamatrix_discrete, laglist, replicates_mi );
+  end
+
+  % Progress report.
+
+  durstring = helper_makePrettyTime(toc);
+  disp([ '.. Lagged Pearson''s correlation took ' durstring '.' ]);
+
+
+  %
   % Compute two-channel transfer entropy.
 
   tic;
@@ -456,6 +495,50 @@ helper_plotLagged( ...
   'Mutual Information (bits)', ...
   'Time-Lagged Mutual Information (discrete events)', ...
   [ plotdir filesep 'lagged-mutual-autodisc-%s.png' ] );
+
+
+% Time-lagged Pearson's correlation.
+% This didn't use swept bins.
+
+if true
+  % NOTE - Plot r^2, not r, to keep axis scale consistent.
+  % For confidence intervals much smaller than the mean (s << u),
+  % the variance of x2 is approximately 4*x2*s2.
+
+  pcorr_st = pcorr_st .* pcorr_st;
+  pcvars_st = 4 * pcvars_st .* pcorr_st;
+
+  pcorr_wk = pcorr_wk .* pcorr_wk;
+  pcvars_wk = 4 * pcvars_wk .* pcorr_wk;
+
+  pcorr_discrete = pcorr_discrete .* pcorr_discrete;
+  pcvars_discrete = 4 * pcvars_discrete .* pcorr_discrete;
+
+  pearsonunits = 'Squared Pearson''s Correlation';
+else
+  pearsonunits = 'Pearson''s Correlation';
+end
+
+helper_plotLagged( ...
+  pcorr_st, pcvars_st, ...
+  laglist, test_lag, swept_sampcounts, NaN, ...
+  pearsonunits, ...
+  'Time-Lagged Pearson''s Correlation (strong channel)', ...
+  [ plotdir filesep 'lagged-pcorr-st-%s.png' ] );
+
+helper_plotLagged( ...
+  pcorr_wk, pcvars_wk, ...
+  laglist, test_lag, swept_sampcounts, NaN, ...
+  pearsonunits, ...
+  'Time-Lagged Pearson''s Correlation (weak channel)', ...
+  [ plotdir filesep 'lagged-pcorr-wk-%s.png' ] );
+
+helper_plotLagged( ...
+  pcorr_discrete, pcvars_discrete, ...
+  laglist, test_lag, swept_sampcounts, NaN, ...
+  pearsonunits, ...
+  'Time-Lagged Pearson''s Correlation (discrete events)', ...
+  [ plotdir filesep 'lagged-pcorr-disc-%s.png' ] );
 
 
 % Transfer entropy.

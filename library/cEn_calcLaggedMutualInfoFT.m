@@ -38,7 +38,7 @@ function [ milist mivars ] = cEn_calcLaggedMutualInfoFT( ...
 %   parameters, per EXTRAPOLATION.txt. If this is empty, default parameters
 %   are used. If this is absent, no extrapolation is performed.
 %
-% "milist" is a vector with the same dimensions as laglist containing
+% "milist" is a vector with the same dimensions as "laglist" containing
 %   mutual information estimates for each time lag.
 % "mivars" is a vector containing the estimated variance of each element
 %   in "milist".

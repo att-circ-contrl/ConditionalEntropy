@@ -308,7 +308,14 @@ for sidx = 1:length(swept_sampcounts)
   % This doesn't use histogram bins.
 
   if want_parallel
-% FIXME - NYI.
+    [ pcorr_st(:,sidx,1), pcvars_st(:,sidx,1) ] = ...
+      cEn_calcLaggedPCorr_MT( datamatrix_lagged_st, laglist, replicates_mi );
+
+    [ pcorr_wk(:,sidx,1), pcvars_wk(:,sidx,1) ] = ...
+      cEn_calcLaggedPCorr_MT( datamatrix_lagged_wk, laglist, replicates_mi );
+
+    [ pcorr_discrete(:,sidx,1), pcvars_discrete(:,sidx,1) ] = ...
+      cEn_calcLaggedPCorr_MT( datamatrix_discrete, laglist, replicates_mi );
   else
     [ pcorr_st(:,sidx,1), pcvars_st(:,sidx,1) ] = ...
       cEn_calcLaggedPCorr( datamatrix_lagged_st, laglist, replicates_mi );

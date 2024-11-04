@@ -177,7 +177,7 @@ for bidx = 1:bincount
     countlabel = helper_makePrettyCount(sampcountlist(sidx));
 
     if isnan(histbinlist(bidx))
-      title([ titleprefix ' - auto bins -' countlabel ' samples' ]);
+      title([ titleprefix ' - auto bins - ' countlabel ' samples' ]);
 
       saveas( thisfig, [ fileprefix '-lagcase-autobins-' ...
         countlabel 'samp.png' ] );

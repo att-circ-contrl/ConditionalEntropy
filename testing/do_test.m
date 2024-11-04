@@ -608,6 +608,11 @@ if want_sweep_sampcount
   mutualraw = nan([ sampsweepsize, binsweepsize, datasize_mutual ]);
   mutualext = mutualraw;
 
+  % Using the 2-channel transfer entropy test cases for lagged Pearson's.
+  % No bins to sweep for this.
+  lagpcraw = ...
+    nan([ lagcount, sampsweepsize, 1, datasize_te_2ch ]);
+
   % Using the 2-channel transfer entropy test cases for lagged MI.
   lagmutualraw = ...
     nan([ lagcount, sampsweepsize, binsweepsize, datasize_te_2ch ]);
@@ -784,6 +789,62 @@ if want_sweep_sampcount
       durstring = helper_makePrettyTime(toc);
       disp([ ' -- Mutual information for ' prettysamps ' samples took ' ...
         durstring '.' ]);
+    end
+
+
+    % Time-lagged Pearson's correlation.
+
+    if want_test_pearson_lagged
+      % Using the 2-channel transfer entropy test cases for lagged Pearson's.
+      [ thisdatasetlist_2ch thisdatasetlist_3ch ] = ...
+        helper_makeDatasetsTransfer( ...
+          thissampcount, te_test_lag, signal_type );
+      [ thisdatasetlist_2ch_ft thisdatasetlist_3ch_ft ] = ...
+        helper_makeDatasetsTransfer_FT( ...
+          thisftsamps, ft_trials, te_test_lag, signal_type );
+      thisdatasetlist = thisdatasetlist_2ch;
+      thisdatasetlist_ft = thisdatasetlist_2ch_ft;
+
+      tic;
+
+      dstidx = 1;
+      srcidx = 2;
+
+      for didx = 1:length(thisdatasetlist)
+        % No histogram bins, so no bin size sweep.
+
+        if want_test_ft
+          thisdata = thisdatasetlist_ft{didx,1};
+
+          if want_parallel
+            [ pclist_raw pcvar ] = cEn_calcLaggedPCorrFT_MT( ...
+              thisdata, [ dstidx srcidx ], te_laglist, replicates );
+          else
+            [ pclist_raw pcvar ] = cEn_calcLaggedPCorrFT( ...
+              thisdata, [ dstidx srcidx ], te_laglist, replicates );
+          end
+
+          lagpcraw( :, sidx, 1, didx ) = pclist_raw;
+        else
+          thisdata = thisdatasetlist{didx,1};
+          dstseries = thisdata(dstidx,:);
+          srcseries = thisdata(srcidx,:);
+
+          if want_parallel
+            [ pclist_raw pcvar ] = cEn_calcLaggedPCorr_MT( ...
+              { dstseries, srcseries }, te_laglist, replicates );
+          else
+            [ pclist_raw pcvar ] = cEn_calcLaggedPCorr( ...
+              { dstseries, srcseries }, te_laglist, replicates );
+          end
+
+          lagpcraw( :, sidx, 1, didx ) = pclist_raw;
+        end
+      end
+
+      durstring = helper_makePrettyTime(toc);
+      disp([ ' -- Time-lagged Pearson''s for ' prettysamps ...
+        ' samples took ' durstring '.' ]);
     end
 
 
@@ -1119,6 +1180,19 @@ if want_sweep_sampcount
     helper_plotSweptData( mutualext, swept_sampcounts, swept_histbins, ...
       datalabels_mutual, datatitles_mutual, 'Mutual Information (bits)', ...
       'Mutual Information (extrap)', [ plotdir filesep 'mutual-ext' ] );
+  end
+
+  if want_test_pearson_lagged
+    % Using the 2-channel transfer entropy test cases for lagged MI.
+    % No bin sweep and no extrapolation.
+    % Plot the square of the correlation, to keep it positive.
+
+    helper_plotTESweptData( lagpcraw .* lagpcraw, ...
+      te_laglist, te_test_lag, swept_sampcounts, NaN, ...
+      datalabels_te_2ch, datatitles_te_2ch, ...
+      'Squared Pearson''s Correlation', ...
+      'Lagged Pearson''s Correlation', ...
+      [ plotdir filesep 'lagpc' ] );
   end
 
   if want_test_mutual_lagged

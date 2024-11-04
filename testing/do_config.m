@@ -8,6 +8,7 @@
 want_test_entropy = false;
 want_test_conditional = false;
 want_test_mutual = false;
+want_test_pearson_lagged = true;
 want_test_mutual_lagged = true;
 want_test_transfer = true;
 

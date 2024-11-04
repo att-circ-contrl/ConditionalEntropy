@@ -52,7 +52,7 @@ srcseries = dataseries(2:(xcount+1));
 %
 % Walk through the lag list, measuring correlation.
 
-rlist = nan(size(laglist));
+rlist = nan([ xcount, lagcount ]);
 rvars = rlist;
 
 for lidx = 1:lagcount
